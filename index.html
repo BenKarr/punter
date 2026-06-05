@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+<title>punter</title>
+<meta name="theme-color" content="#10585f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="punter">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <section class="screen on" id="s-splash">
+    <div class="splashwrap">
+      <img class="appicon bob" src="icons/icon-192.png" alt="">
+      <div class="pname">punter</div>
+      <div class="splashbar"><i></i></div>
+    </div>
+  </section>
+
+  <!-- FACE ID LOCK -->
+  <section class="screen" id="s-lock">
+    <div class="lockwrap">
+      <img class="appicon" src="icons/icon-192.png" alt="">
+      <div class="pname" style="font-size:22px">punter</div>
+      <div class="faceid" id="faceid"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3H5a2 2 0 0 0-2 2v2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M9 9v1.5M15 9v1.5M12 9v3l-1.2 1"/><path d="M8.8 15a3.6 3.6 0 0 0 6.4 0"/></svg></div>
+      <div class="lockhint" id="lockhint">Tap to unlock with Face ID</div>
+    </div>
+  </section>
+
+  <!-- SIGN IN -->
+  <section class="screen" id="s-signin">
+    <div class="logo" style="width:72px;height:72px;border-radius:16px;background:var(--amber-bg);border:1px solid var(--amber-line);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;color:var(--amber);overflow:hidden"><img src="icons/icon-192.png" style="width:100%;height:100%" alt=""></div>
+    <h1><span class="gb low">punter</span></h1>
+    <p>Sign in to sync and back up your contacts to your private Firebase workspace.</p>
+    <button class="gbtn" id="googleBtn"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2-1.9 3.3-4.7 3.3-7.8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.8 1.1-2.9 0-5.3-1.9-6.2-4.6H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.7l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>Continue with Google</button>
+    <button class="ebtn" id="demoBtn">Continue in demo mode</button>
+    <div class="fine" id="signinFine">PRIVATE FIREBASE WORKSPACE · PWA ON GITHUB PAGES</div>
+  </section>
+
+  <!-- HOME -->
+  <section class="screen tabscreen" id="t-home">
+    <div class="body"><div class="dash">
+      <div class="hello" id="hello">Hi</div>
+      <div class="syncline" id="syncline"><span class="live"><span class="b"></span>READY</span></div>
+      <div class="gcards">
+        <div class="gcard acc" data-go="t-contacts"><div class="k" id="kToday">0</div><div class="l">grabbed today</div></div>
+        <div class="gcard" data-go="outreach"><div class="k" id="kUntouched">0</div><div class="l">untouched, ready to message</div></div>
+        <div class="gcard" data-go="t-reposts"><div class="k" id="kReposts">0</div><div class="l">reposts to review</div></div>
+        <div class="gcard grn"><div class="k" id="kActive">0</div><div class="l">active contacts</div></div>
+      </div>
+      <div class="funnel">
+        <div class="seclbl">Status mix</div>
+        <div class="frow"><span>Yes</span><div class="bar" id="barYes" style="width:0;background:var(--grn)"></div><span class="v" id="vYes">0</span></div>
+        <div class="frow"><span>Maybe</span><div class="bar" id="barMaybe" style="width:0;background:var(--yellow)"></div><span class="v" id="vMaybe">0</span></div>
+        <div class="frow"><span>No</span><div class="bar" id="barNo" style="width:0;background:var(--red)"></div><span class="v" id="vNo">0</span></div>
+      </div>
+      <button class="bigbtn" data-go="outreach"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg><span id="outreachBtnLbl">Start batch outreach</span></button>
+      <div class="fbbox" id="cloudBox">
+        <div class="dico"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.7 1 6.3 2.6M21 3v6h-6"/></svg></div>
+        <div style="flex:1"><div class="t" id="cloudTitle">Demo mode</div><div class="s" id="cloudSub">data saved on this device only</div></div>
+        <div class="pilltag" id="cloudPill">LOCAL</div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- CONTACTS -->
+  <section class="screen tabscreen" id="t-contacts">
+    <div class="hd">
+      <div class="hd-top">
+        <div class="brand"><span class="gb low">punter</span></div>
+        <div class="iconbtn" id="selBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      </div>
+      <div class="search"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="searchInput" placeholder="Search number, name, area..."></div>
+      <div class="tabs" id="catTabs">
+        <button class="tab on" data-cat="active"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg>Active <span class="tcount" id="cAct">0</span></button>
+        <button class="tab" data-cat="accomplished"><svg class="ic" viewBox="0 0 24 24"><path d="M7 4h10v3a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 12v4M8 20h8M9.5 20l.8-4h3.4l.8 4"/></svg>Done <span class="tcount" id="cAcc">0</span></button>
+        <button class="tab" data-cat="archived"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M9.5 12h5"/></svg>Archive <span class="tcount" id="cArc">0</span></button>
+      </div>
+      <div class="fbar" id="fbar">
+        <div class="fpill on" data-f="all">All</div>
+        <div class="fpill yes" data-f="yes"><svg class="ic" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Yes</div>
+        <div class="fpill maybe" data-f="maybe"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6"/></svg>Maybe</div>
+        <div class="fpill no" data-f="no"><svg class="ic" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>No</div>
+        <div class="fpill" data-f="flame"><span class="em">🔥</span>Hot</div>
+        <div class="fpill" data-f="cold"><span class="em">❄️</span>Cold</div>
+        <div class="fpill" data-f="creamed">Creamed</div>
+        <div class="fpill" data-f="pinned"><svg class="ic" viewBox="0 0 24 24"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><path d="M12 15v6"/></svg>Pinned</div>
+      </div>
+    </div>
+    <div class="body"><div class="list" id="rows"></div></div>
+    <div class="bulkbar" id="bulkbar">
+      <button data-bulk="batch"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg>Hot</button>
+      <button data-bulk="archive"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8M10 12h4"/></svg>Archive</button>
+      <button class="del" data-bulk="delete"><span class="em">☢️</span>Nuke</button>
+    </div>
+  </section>
+
+  <!-- OUTREACH TAB -->
+  <section class="screen tabscreen" id="t-outreach">
+    <div class="body"><div class="dash">
+      <div class="hello">Outreach</div>
+      <div class="syncline" id="outreachCount">0 untouched contacts ready</div>
+      <button class="bigbtn" data-go="outreach"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg>Start batch</button>
+      <div class="card" style="margin-top:5px"><div class="seclbl">How it works</div><div class="meta">Steps through every untouched contact, opens WhatsApp with your template, marks it messaged, moves to the next.</div></div>
+    </div></div>
+  </section>
+
+  <!-- REPOSTS -->
+  <section class="screen tabscreen" id="t-reposts">
+    <div class="hd"><div class="hd-top"><div class="brand">REVIEW <span class="build" id="repCount">0</span></div></div></div>
+    <div class="body"><div class="rp" id="repostlist"></div></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen tabscreen" id="t-settings">
+    <div class="hd"><div class="hd-top"><div class="brand">SETTINGS</div></div></div>
+    <div class="body"><div class="set">
+      <div class="sgrp"><div class="seclbl">Account &amp; cloud</div><div class="scard">
+        <div class="srow"><div class="rico" style="background:var(--amber-bg);color:var(--amber)"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><div class="ti"><div class="t" id="acctName">Demo user</div><div class="s" id="acctSub">not signed in</div></div></div>
+        <div class="srow"><div class="rico" style="background:var(--grn-bg);color:var(--grn)"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.7 1 6.3 2.6M21 3v6h-6"/></svg></div><div class="ti"><div class="t">Cloud sync</div><div class="s" id="syncSub">local only</div></div><div class="pilltag" id="syncPill">OFF</div></div>
+        <div class="srow" id="signoutRow" style="display:none"><div class="ti"><div class="t" style="color:var(--red2)">Sign out</div></div><div class="v">›</div></div>
+      </div></div>
+      <div class="sgrp"><div class="seclbl">Security</div><div class="scard">
+        <div class="srow"><div class="rico" style="background:var(--amber-bg);color:var(--amber)"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3H5a2 2 0 0 0-2 2v2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M9 9v1.5M15 9v1.5M12 9v3l-1.2 1M8.8 15a3.6 3.6 0 0 0 6.4 0"/></svg></div><div class="ti"><div class="t">Face ID lock</div><div class="s">unlock punter with Face ID</div></div><div class="sw" id="faceSw"><i></i></div></div>
+        <div class="srow" id="lockdurrow"><div class="ti"><div class="t">Require unlock</div><div class="s">after the app is closed</div></div><div class="v" id="lockdurval">After 5 minutes ›</div></div>
+      </div></div>
+      <div class="sgrp"><div class="seclbl">Message templates</div><div class="scard" id="tmplList"></div></div>
+      <div class="sgrp"><div class="seclbl">Data</div><div class="scard">
+        <div class="srow" id="nukedRow"><div class="rico" style="background:var(--red-bg)"><span style="font-size:15px">☢️</span></div><div class="ti"><div class="t">Nuked numbers</div><div class="s">remembered, won't re-add</div></div><div class="v" id="nukedCount">0 ›</div></div>
+        <div class="srow" id="seedRow"><div class="ti"><div class="t">Load sample contacts</div><div class="s">populate demo data</div></div><div class="v">›</div></div>
+        <div class="srow" id="wipeRow"><div class="ti"><div class="t" style="color:var(--red2)">Clear all contacts</div></div><div class="v">›</div></div>
+      </div></div>
+    </div></div>
+  </section>
+
+  <!-- DETAIL -->
+  <section class="screen" id="s-detail">
+    <div class="dfloatback" id="detailBack"><svg class="ic" viewBox="0 0 24 24" style="color:#fff"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="dfloatedit" id="editFab"><svg class="ic" viewBox="0 0 24 24" style="color:#fff"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M14 6l4 4"/></svg></div>
+    <div class="body" style="padding-bottom:30px">
+      <div class="carou" id="carou"></div>
+      <div class="strip" id="strip"></div>
+      <div class="dbody">
+        <div class="dnum" id="dnum"></div>
+        <div class="dalt" id="dalt"></div>
+        <div class="acts">
+          <div class="act wa" id="actWa"><svg class="ic" viewBox="0 0 24 24"><path d="M3.5 20.5l1.4-4.1A8 8 0 1 1 8 19.1z"/><path d="M8.5 9.5c0 3.3 2.7 6 6 6"/></svg>WA</div>
+          <div class="act" id="actSms"><svg class="ic" viewBox="0 0 24 24"><path d="M4 5h16v10H9l-4.5 3.5z"/><circle cx="8.5" cy="10" r=".6"/><circle cx="12" cy="10" r=".6"/><circle cx="15.5" cy="10" r=".6"/></svg>SMS</div>
+          <div class="act" id="actCopy"><svg class="ic" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2"/></svg>Copy</div>
+          <div class="act" id="actMap"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>Map</div>
+        </div>
+        <div class="contactedline" id="contactedLine"></div>
+        <div class="sec"><div class="seclbl">Status</div><div class="segrow" id="statusSeg">
+          <button class="seg yes" data-st="yes"><svg class="ic" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Yes</button>
+          <button class="seg maybe" data-st="maybe"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6"/></svg>Maybe</button>
+          <button class="seg no" data-st="no"><svg class="ic" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>No</button>
+        </div><div style="font-family:var(--mo);font-size:10px;color:var(--mut4);margin-top:6px">Marking No archives the contact</div></div>
+        <div class="sec"><div class="seclbl">Tags</div><div class="tagsrow" id="tagRow">
+          <button class="tagbtn flame" data-tag="flame"><span class="em">🔥</span>Hot</button>
+          <button class="tagbtn cold" data-tag="cold"><span class="em">❄️</span>Cold</button>
+          <button class="tagbtn creamed" data-tag="creamed">Creamed</button>
+          <button class="tagbtn pinbtn" data-tag="pinned"><svg class="ic" viewBox="0 0 24 24"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><path d="M12 15v6"/></svg>Pinned</button>
+        </div></div>
+        <div class="sec" id="listingSec"><div class="seclbl">Listing</div><div class="ttl" id="dtitle"></div><div class="desc" id="ddesc"></div></div>
+        <div class="sec" id="ratesSec"><div class="seclbl">Rates</div><div class="card" id="drates"></div></div>
+        <div class="sec"><div class="seclbl">Notes</div><div class="notebox" id="dnotes" contenteditable="true" data-ph="Tap to add a note"></div></div>
+        <div class="sec" id="sourceSec"><div class="seclbl">Source</div><div class="openlink" id="dsource"><span id="dsourceurl"></span><svg class="ic" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></div></div>
+        <div class="sec" id="mapSec"><div class="seclbl">Location</div><div class="mapwrap"><div class="maphd"><span class="area" id="mapArea"></span><span class="approx">approx area</span></div><iframe id="mapFrame" style="width:100%;height:150px;border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div></div>
+        <div class="sec"><div class="seclbl">Move to</div><div class="catmove" id="catMove">
+          <button class="catbtn" data-cat="active"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg>Active</button>
+          <button class="catbtn" data-cat="accomplished"><svg class="ic" viewBox="0 0 24 24"><path d="M7 4h10v3a5 5 0 0 1-10 0z"/><path d="M12 12v4M8 20h8"/></svg>Done</button>
+          <button class="catbtn" data-cat="archived"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8"/></svg>Archived</button>
+        </div></div>
+        <div class="delrow"><button class="delbtn nuke" id="delBtn"><span class="em">☢️</span>Nuke contact</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDIT -->
+  <section class="screen" id="s-edit">
+    <div class="hd"><div class="hd-top"><div class="iconbtn" id="editBack"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div><div class="brand">EDIT CONTACT</div><div style="width:32px"></div></div></div>
+    <div class="body" style="padding:16px 14px 92px">
+      <div class="field"><label>Display name</label><input id="e-name"></div>
+      <div class="field"><label>Primary number</label><input class="mono" id="e-number"></div>
+      <div class="field"><label>Alternate numbers</label><input class="mono" id="e-alt" placeholder="comma separated"></div>
+      <div class="field"><label>Address</label><input id="e-address" placeholder="Street / area"></div>
+      <div class="field"><label>Region</label><input id="e-region" placeholder="Essex, London..."></div>
+      <div class="field"><label>Price</label><input id="e-price" placeholder="£120/hr"></div>
+      <div class="field"><label>Listing title</label><input id="e-title"></div>
+      <div class="field"><label>Notes</label><textarea id="e-notes"></textarea></div>
+    </div>
+    <div class="editbar"><button class="pbtn sec" id="editCancel">Cancel</button><button class="pbtn pri" id="editSave">Save</button></div>
+  </section>
+
+  <!-- ADD -->
+  <section class="screen" id="s-add">
+    <div class="hd">
+      <div class="hd-top"><div class="iconbtn" id="addBack"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></div><div class="brand">ADD CONTACT</div><div style="width:32px"></div></div>
+      <div class="amode"><button class="on" id="am-link">From link</button><button id="am-man">Manual</button></div>
+    </div>
+    <div class="body" style="padding:14px 14px 96px">
+      <div id="addlink">
+        <div class="sharepill"><svg class="ic" viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></svg><span id="shareUrl">paste or share a listing link</span></div>
+        <div class="field"><label>Listing URL</label><input class="mono" id="a-url" placeholder="https://vivastreet.co.uk/..."></div>
+        <div class="seclbl">Details</div>
+        <div class="autocard"><div class="addnote">On the live app a Cloud Function pulls the listing title, price and photos from this link. Here, fill what you like below.</div></div>
+        <div class="field" style="margin-top:14px"><label>Display name</label><input id="a-name2" placeholder="Name, area"></div>
+        <div class="field"><label>Phone number · the part you add</label><input class="mono numfield" id="a-number2" placeholder="07... paste the number you revealed"></div>
+        <div class="addnote">The number is hidden behind a tap on Vivastreet, so reveal it, copy, paste here.</div>
+      </div>
+      <div id="addman" style="display:none">
+        <div class="field"><label>Phone number</label><input class="mono numfield" id="a-number" placeholder="07..."></div>
+        <div class="field"><label>Display name</label><input id="a-name" placeholder="Name, area"></div>
+        <div class="field"><label>Location · optional</label><input id="a-loc" placeholder="Area, region"></div>
+        <div class="field"><label>Price · optional</label><input id="a-price" placeholder="£120/hr"></div>
+      </div>
+    </div>
+    <div class="editbar"><button class="pbtn sec" id="addCancel">Cancel</button><button class="pbtn pri" id="addSave">Save contact</button></div>
+  </section>
+
+  <!-- OUTREACH STEPPER -->
+  <section class="screen" id="s-outreach">
+    <div class="obar"><div class="iconbtn" id="outBack"><svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></div><div class="brand">BATCH OUTREACH</div><div class="prog" id="oprog">0 / 0</div></div>
+    <div class="progbar"><i id="opbar" style="width:0"></i></div>
+    <div class="body" style="padding-bottom:96px" id="outBody"></div>
+    <div class="ofoot"><button class="skip" id="outSkip">Skip</button><button class="send" id="outSend"><svg class="ic" viewBox="0 0 24 24"><path d="M3.5 20.5l1.4-4.1A8 8 0 1 1 8 19.1z"/><path d="M8.5 9.5c0 3.3 2.7 6 6 6"/></svg>Send &amp; next</button></div>
+  </section>
+
+  <!-- PHOTO VIEWER -->
+  <section class="screen" id="s-photo">
+    <div class="pclose" id="photoClose"><svg class="ic" viewBox="0 0 24 24" style="color:#fff"><path d="M6 6l12 12M18 6 6 18"/></svg></div>
+    <div class="pcount" id="pcount"></div>
+    <div id="photoSlides"></div>
+    <div class="pnav l" id="photoPrev"><svg class="ic" viewBox="0 0 24 24" style="color:#fff"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="pnav r" id="photoNext"><svg class="ic" viewBox="0 0 24 24" style="color:#fff"><path d="M9 18l6-6-6-6"/></svg></div>
+  </section>
+
+  <!-- lock duration sheet -->
+  <div class="sheet-bg" id="locksheetbg"><div class="sheet" id="locksheet">
+    <div class="grab"></div><h3>Require Face ID</h3>
+    <div class="fgroup"><div class="lbl">After app is closed for</div><div class="fchips" id="durChips">
+      <span class="fchip" data-d="Immediately">Immediately</span>
+      <span class="fchip" data-d="After 1 minute">After 1 minute</span>
+      <span class="fchip on" data-d="After 5 minutes">After 5 minutes</span>
+      <span class="fchip" data-d="After 15 minutes">After 15 minutes</span>
+      <span class="fchip" data-d="After 1 hour">After 1 hour</span>
+    </div></div>
+    <button class="pbtn pri" style="width:100%" id="durDone">Done</button>
+  </div></div>
+
+  <div class="fab hide" id="fab"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+  <div class="nav hide" id="nav">
+    <a class="on" data-t="t-home"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Home</a>
+    <a data-t="t-contacts"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Contacts</a>
+    <a data-t="outreach"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg>Outreach</a>
+    <a data-t="t-reposts"><span class="badge" id="navRep" style="display:none">0</span><svg class="ic" viewBox="0 0 24 24"><path d="M4 9h11a4 4 0 0 1 0 8h-4M4 9l3-3M4 9l3 3"/></svg>Reposts</a>
+    <a data-t="t-settings"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Settings</a>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
