@@ -31,19 +31,6 @@ function go(id){ screens.forEach(s=>s.classList.remove('on')); $(id).classList.a
 function back(){ showTab(lastTab); }
 
 /* ---------------- stores ---------------- */
-function LocalStore(){
-  let listeners=[];
-  const read=()=>{ try{ return JSON.parse(localStorage.getItem('punter_contacts')||'[]'); }catch(e){ return []; } };
-  const write=(a)=>{ localStorage.setItem('punter_contacts',JSON.stringify(a)); listeners.forEach(f=>f(a)); };
-  return {
-    cloud:false,
-    subscribe(f){ listeners.push(f); f(read()); return ()=>{ listeners=listeners.filter(x=>x!==f); }; },
-    add(o){ const a=read(); o.id='c'+Date.now()+Math.floor(Math.random()*999); o.ts=o.ts||Date.now(); a.unshift(o); write(a); return o.id; },
-    update(id,patch){ const a=read(); const i=a.findIndex(c=>c.id===id); if(i>=0){ a[i]={...a[i],...patch}; write(a); } },
-    remove(id){ write(read().filter(c=>c.id!==id)); },
-    get(id){ return read().find(c=>c.id===id); }
-  };
-}
 function FirestoreStore(uid){
   const {db,fs}=window.__fb;
   const col=fs.collection(db,'users',uid,'contacts');
@@ -117,8 +104,7 @@ function renderHome(){
   $('barYes').style.width=(y/mx*120)+'px'; $('barMaybe').style.width=(m/mx*120)+'px'; $('barNo').style.width=(n/mx*120)+'px';
   $('outreachBtnLbl').textContent='Start batch outreach ('+queue.length+')';
   $('outreachCount').textContent=queue.length+' untouched contacts ready';
-  if(store && store.cloud){ $('cloudTitle').textContent='Synced to Firebase'; $('cloudSub').textContent=(user?user.email:'')+' · '+contacts.length+' contacts'; $('cloudPill').textContent='LIVE'; }
-  else { $('cloudTitle').textContent='Demo mode'; $('cloudSub').textContent='data saved on this device only'; $('cloudPill').textContent='LOCAL'; }
+  $('cloudTitle').textContent='Synced to Firebase'; $('cloudSub').textContent=(user?user.email:'')+' · '+contacts.length+' contacts'; $('cloudPill').textContent='LIVE';
 }
 function renderReposts(){
   const reps=contacts.filter(c=>c.repost);
@@ -196,8 +182,7 @@ function outNext(send){
 function getTemplates(){ try{ const t=JSON.parse(localStorage.getItem('punter_templates')); if(t&&t.length) return t; }catch(e){} return [{name:'First contact',text:'Hi, saw your listing. Are you free this week?'},{name:'Follow up',text:'Hi again, are you still available?'}]; }
 function saveTemplates(t){ localStorage.setItem('punter_templates',JSON.stringify(t)); }
 function renderSettings(){
-  if(store&&store.cloud){ $('acctName').textContent=user?user.email:'Signed in'; $('acctSub').textContent='Firebase workspace'; $('syncSub').textContent='live, all devices'; $('syncPill').textContent='ON'; $('signoutRow').style.display=''; }
-  else { $('acctName').textContent='Demo user'; $('acctSub').textContent='not signed in'; $('syncSub').textContent='local only'; $('syncPill').textContent='OFF'; $('signoutRow').style.display='none'; }
+  $('acctName').textContent=user?user.email:'Signed in'; $('acctSub').textContent='Firebase workspace'; $('syncSub').textContent='live, all devices'; $('syncPill').textContent='ON'; $('signoutRow').style.display='';
   $('faceSw').classList.toggle('on', localStorage.getItem('punter_faceid')==='1');
   $('lockdurval').textContent=(localStorage.getItem('punter_lockdur')||'After 5 minutes')+' ›';
   const tpl=getTemplates();
@@ -265,44 +250,24 @@ async function initFirebase(){
     const db=fsM.getFirestore(app);
     window.__fb={ app, auth, db, fs:fsM, authM };
     return true;
-  }catch(e){ console.warn('Firebase init failed, demo mode', e); return false; }
+  }catch(e){ console.warn('Firebase init failed', e); return false; }
 }
 function proceedAfterLock(){
-  if(mode==='cloud'){
-    const {auth,authM}=window.__fb;
-    authM.onAuthStateChanged(auth, u=>{ if(u){ user=u; setStore(FirestoreStore(u.uid)); enterApp(); } else { go('s-signin'); } });
-  } else {
-    go('s-signin');
-    $('googleBtn').style.display='none';
-    $('signinFine').textContent='DEMO MODE · ADD YOUR FIREBASE CONFIG FOR CLOUD SYNC';
-  }
+  const {auth,authM}=window.__fb;
+  authM.onAuthStateChanged(auth, u=>{ if(u){ user=u; setStore(FirestoreStore(u.uid)); enterApp(); } else { go('s-signin'); } });
 }
 function enterApp(){ showTab('t-home'); const p=new URLSearchParams(location.search); const u=p.get('url')||p.get('text'); if(u){ go('s-add'); addMode('link'); if($('a-url')) $('a-url').value=u; $('shareUrl').textContent=u.slice(0,46); try{ history.replaceState({},'','./'); }catch(e){} } }
 async function boot(){
   if('serviceWorker' in navigator){ try{ await navigator.serviceWorker.register('sw.js'); }catch(e){} }
-  mode = (await initFirebase()) ? 'cloud' : 'local';
+  const ok = await initFirebase();
   setTimeout(()=>{
     $('s-splash').classList.remove('on');
-    if(localStorage.getItem('punter_faceid')==='1') go('s-lock');
-    else proceedAfterLock();
+    if(!ok){ showFatal("Can't reach your workspace. Check your connection and reload."); return; }
+    if(localStorage.getItem('punter_faceid')==='1') go('s-lock'); else proceedAfterLock();
   },1500);
 }
+function showFatal(msg){ go('s-signin'); $('googleBtn').style.display='none'; $('signinSub').textContent=msg; $('signinFine').textContent='RELOAD TO RETRY'; }
 
-/* ---------------- sample data ---------------- */
-function seedSample(force){
-  const s=LocalStore();
-  if(!force && contacts.length) return;
-  const now=Date.now();
-  const S=[
-    {number:'07712904118',name:'Elena, Chelmsford',status:'maybe',tags:['creamed'],pinned:true,price:'£120/hr',location:'Central Chelmsford',region:'Essex',listingTitle:'Elena, new in town',desc:'Friendly and independent. Daytime and evenings, parking nearby.',rates:[{d:'30 mins',a:'£80'},{d:'1 hour',a:'£120'},{d:'2 hours',a:'£200'}],notes:'Message after 11am.',images:[],grabs:4,repost:true,url:'https://vivastreet.co.uk/chelmsford',cat:'active',ts:now},
-    {number:'07820553471',name:'Sasha, Brentwood',status:null,tags:['flame'],price:'£100/hr',location:'Brentwood',region:'Essex',rates:[{d:'1 hour',a:'£100'}],images:[],grabs:1,cat:'active',ts:now-3600000},
-    {number:'07466118902',name:'New listing, Romford',status:null,tags:[],price:'£90/hr',location:'Romford',region:'London',images:[],grabs:1,cat:'active',ts:now-7200000},
-    {number:'07533671240',name:'Mia, Basildon',status:'no',tags:['cold'],price:'£140/hr',location:'Basildon',region:'Essex',images:[],grabs:2,seen:true,cat:'archived',ts:now-90000000},
-    {number:'07901224558',name:'Independent, Colchester',status:'yes',tags:[],price:'£110/hr',location:'Colchester',region:'Essex',images:[],grabs:1,cat:'accomplished',ts:now-180000000}
-  ];
-  S.forEach(c=>s.add(c));
-  toast('Sample contacts loaded');
-}
 
 /* ---------------- wire events ---------------- */
 function wire(){
@@ -313,7 +278,6 @@ function wire(){
   document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.go)));
   $('fab').addEventListener('click',()=>{ go('s-add'); addMode('link'); });
   // signin
-  $('demoBtn').addEventListener('click',()=>{ setStore(LocalStore()); if(!contacts.length) seedSample(); enterApp(); });
   $('googleBtn').addEventListener('click',async()=>{ try{ const {auth,authM}=window.__fb; await authM.signInWithPopup(auth,new authM.GoogleAuthProvider()); }catch(e){ toast('Sign-in failed'); } });
   // lock
   $('faceid').addEventListener('click',async()=>{ const f=$('faceid'); f.classList.add('scan'); $('lockhint').textContent='Scanning...'; await tryUnlock(); setTimeout(()=>{ f.classList.remove('scan'); $('lockhint').textContent='Tap to unlock with Face ID'; $('s-lock').classList.remove('on'); proceedAfterLock(); },700); });
@@ -363,9 +327,8 @@ function wire(){
   $('durChips').querySelectorAll('.fchip').forEach(c=>c.addEventListener('click',()=>{ $('durChips').querySelectorAll('.fchip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); localStorage.setItem('punter_lockdur',c.dataset.d); $('lockdurval').textContent=c.dataset.d+' ›'; }));
   $('durDone').addEventListener('click',()=>{ $('locksheet').classList.remove('on'); setTimeout(()=>$('locksheetbg').classList.remove('on'),200); });
   $('signoutRow').addEventListener('click',async()=>{ try{ const {auth,authM}=window.__fb; await authM.signOut(auth); location.reload(); }catch(e){} });
-  $('seedRow').addEventListener('click',()=>seedSample(true));
   $('nukedRow').addEventListener('click',()=>{ const n=getNuked(); if(!n.length){ toast('No nuked numbers'); return; } if(confirm('Clear '+n.length+' nuked numbers?')){ localStorage.setItem('punter_nuked','[]'); renderSettings(); toast('Nuked list cleared'); } });
-  $('wipeRow').addEventListener('click',()=>{ if(store&&!store.cloud){ localStorage.setItem('punter_contacts','[]'); contacts=[]; renderAll(); toast('Cleared'); } else { contacts.forEach(c=>store.remove(c.id)); toast('Cleared'); } });
+  $('wipeRow').addEventListener('click',()=>{ if(!confirm('Delete ALL your contacts? This cannot be undone.')) return; contacts.slice().forEach(c=>store.remove(c.id)); toast('Cleared'); });
   $('tmplList').addEventListener('click',e=>{ const r=e.target.closest('[data-tpl]'); if(!r) return; const tpl=getTemplates(); if(r.dataset.tpl==='new'){ const text=prompt('New template message:'); if(text){ tpl.push({name:'Template '+(tpl.length+1),text}); saveTemplates(tpl); renderSettings(); } } else { const i=+r.dataset.tpl; const text=prompt('Edit template:',tpl[i].text); if(text!=null){ tpl[i].text=text; saveTemplates(tpl); renderSettings(); } } });
   // reposts delegate
   $('repostlist').addEventListener('click',e=>{ const b=e.target.closest('[data-rep]'); if(!b) return; if(b.dataset.rep==='view') openDetail(b.dataset.id); else { store.update(b.dataset.id,{repost:false}); toast('Dismissed'); } });
