@@ -1,16 +1,8 @@
-// PASTE YOUR FIREBASE CONFIG HERE.
-// Until you do, punter runs in demo mode (data saved on this device only).
-//
-// After Phase 1, replace the line below with the firebaseConfig block Firebase gave you,
-// keeping the "export " in front. It will look like:
-//
-// export const firebaseConfig = {
-//   apiKey: "AIza...",
-//   authDomain: "punter-xxxx.firebaseapp.com",
-//   projectId: "punter-xxxx",
-//   storageBucket: "punter-xxxx.appspot.com",
-//   messagingSenderId: "000000000000",
-//   appId: "1:000:web:abc123"
-// };
-
-export const firebaseConfig = null;
+export const firebaseConfig = {
+  apiKey: "AIzaSyAATu3QmIQmhWaB1zTzHNqKju9x-ppXujk",
+  authDomain: "punter-69ae4.firebaseapp.com",
+  projectId: "punter-69ae4",
+  storageBucket: "punter-69ae4.firebasestorage.app",
+  messagingSenderId: "110599395479",
+  appId: "1:110599395479:web:0b2df7c94fee10a99cb1d2"
+};
