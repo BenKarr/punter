@@ -20,7 +20,7 @@ let store = null, mode = 'local', user = null;
 let currentTab = 't-home', lastTab = 't-home';
 let currentCat = 'active', currentFilter = 'all', currentId = null, selMode = false;
 let currentCountry = localStorage.getItem('punter_country') || 'all';
-let activeTplIdx = 0, dateFilter = 'all', _returnScreen = null, outCritDesc = '';
+let activeTplIdx = 0, dateFilter = 'all', _returnScreen = null, outCritDesc = '', _listScroll = 0;
 let routeUK = localStorage.getItem('punter_route_uk') || 'sms';
 let routeOther = localStorage.getItem('punter_route_other') || 'wa';
 let sessionForceWa = false;
@@ -44,7 +44,7 @@ function showTab(id){
   $(id).querySelector('.body')?.scrollTo(0,0);
 }
 function go(id){ screens.forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); $('nav').classList.add('hide'); $('fab').classList.add('hide'); $(id).querySelector('.body')?.scrollTo(0,0); }
-function back(){ if(_returnScreen){ const r=_returnScreen; _returnScreen=null; go(r); return; } showTab(lastTab); }
+function back(){ if(_returnScreen){ const r=_returnScreen; _returnScreen=null; go(r); return; } const t=lastTab; showTab(t); if(t==='t-contacts'){ const b=$('t-contacts')&&$('t-contacts').querySelector('.body'); if(b) b.scrollTop=_listScroll; } }
 
 /* ---------------- stores ---------------- */
 function FirestoreStore(uid){
@@ -149,7 +149,7 @@ function renderCountryBar(){
   el.querySelectorAll('.cpill').forEach(p=>p.addEventListener('click',()=>{ currentCountry=p.dataset.c; localStorage.setItem('punter_country',currentCountry); renderCountryBar(); renderList(); }));
 }
 function renderList(){
-  const list=visibleContacts();
+  const list=visibleContacts().slice().sort((x,y)=>(y.pinned?1:0)-(x.pinned?1:0));
   const el=$('rows');
   if(!list.length){ el.innerHTML=`<div style="text-align:center;color:var(--mut2);font-size:13px;padding:50px 20px">No contacts here yet.<br>Tap + to add one.</div>`; return; }
   el.innerHTML=list.map(rowHtml).join('');
@@ -214,7 +214,7 @@ function buildCarousel(c){
   let ci=0; const slide=(d)=>{ const sl=car.querySelectorAll('.slide'); sl[ci].classList.remove('on'); ci=(ci+d+sl.length)%sl.length; sl[ci].classList.add('on'); dots.querySelectorAll('i').forEach((x,i)=>x.classList.toggle('on',i===ci)); };
   $('carPrev').onclick=()=>slide(-1); $('carNext').onclick=()=>slide(1);
 }
-function openDetail(id){
+function openDetail(id){ try{ const _b=$('t-contacts').querySelector('.body'); if(_b) _listScroll=_b.scrollTop; }catch(e){}
   const c=store.get(id)||contacts.find(x=>x.id===id); if(!c) return; currentId=id;
   buildCarousel(c);
   $('strip').innerHTML=(c.images||[]).map((src,i)=>`<div class="th2${i===0?' on':''}" style="background:center/cover url('${src}')" data-i="${i}"></div>`).join('');
@@ -269,7 +269,7 @@ function tplPicker(channelLabel,onPick){
   o.innerHTML='<div class="ovback"></div><div class="sheet"><div class="sheeth"><div class="t">Pick a template</div><div class="ovx">\u00d7</div></div><div id="tpRows">'+rowsHtml()+'</div><div class="sendbtns"><button class="bwa">Use this template'+(channelLabel?(' \u00b7 '+channelLabel):'')+'</button></div></div>';
   o.style.display='block';
   o.querySelector('.ovback').onclick=closeOvl; o.querySelector('.ovx').onclick=closeOvl;
-  o.querySelectorAll('.trow').forEach(r=>r.onclick=()=>{ sel=+r.dataset.i; o.querySelectorAll('.trow').forEach(x=>x.classList.toggle('sel',x===r)); });
+  o.querySelectorAll('.trow').forEach(r=>r.onclick=()=>{ closeOvl(); onPick(+r.dataset.i); });
   o.querySelector('.bwa').onclick=()=>{ closeOvl(); onPick(sel); };
 }
 function tplEditor(idx){
@@ -487,7 +487,7 @@ function wire(){
   $('actCopy').addEventListener('click',()=>{ const c=store.get(currentId); navigator.clipboard?.writeText(c.number); toast('Copied '+fmtNum(c.number)); });
   $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('WhatsApp',(i)=>{ activeTplIdx=i; store.update(currentId,{lastWa:Date.now()}); refreshContacted(); launchUrl(waLink(c.number,templateText(i))); }); });
   $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('SMS',(i)=>{ activeTplIdx=i; store.update(currentId,{lastSms:Date.now()}); refreshContacted(); { const num=(''+c.number).replace(/[^\d+]/g,''); launchUrl('sms:'+num+'?&body='+encodeURIComponent(templateText(i))); } }); });
-  $('actMap').addEventListener('click',()=>{ const c=store.get(currentId); const q=(c.address||c.location||c.region||'').trim(); if(!q){ toast('No location set'); return; } location.href='https://maps.apple.com/?q='+encodeURIComponent(q); });
+  $('actMap').addEventListener('click',()=>{ const c=store.get(currentId); const q=(c.address||c.location||c.region||'').trim(); if(!q){ toast('No location set'); return; } launchUrl('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)); });
   $('dsource').addEventListener('click',()=>{ const c=store.get(currentId); if(c&&c.url) window.open(c.url,'_blank','noopener'); });
   // photo
   $('photoClose').addEventListener('click',()=>go('s-detail')); $('photoPrev').addEventListener('click',()=>pslide(-1)); $('photoNext').addEventListener('click',()=>pslide(1));
