@@ -64,6 +64,7 @@
         <div class="frow"><span>Maybe</span><div class="bar" id="barMaybe" style="width:0;background:var(--yellow)"></div><span class="v" id="vMaybe">0</span></div>
         <div class="frow"><span>No</span><div class="bar" id="barNo" style="width:0;background:var(--red)"></div><span class="v" id="vNo">0</span></div>
       </div>
+      <div class="naSec" id="naSec" style="display:none"><div class="seclbl">Needs attention</div><div class="na" id="naList"></div></div>
       <button class="bigbtn" data-go="outreach"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg><span id="outreachBtnLbl">Start batch outreach</span></button>
       <div class="fbbox" id="cloudBox">
         <div class="dico"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.7 1 6.3 2.6M21 3v6h-6"/></svg></div>
@@ -83,6 +84,7 @@
       <div class="search"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="searchInput" placeholder="Search number, name, area..."></div>
       <div class="tabs" id="catTabs">
         <button class="tab on" data-cat="active"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg>Active <span class="tcount" id="cAct">0</span></button>
+        <button class="tab" data-cat="ao"><svg class="ic" viewBox="0 0 24 24"><path d="M8.4 8.2c-.4 3 1.1 5 2.6 6.9.7.9.9 2.6.7 4.4h.6c-.2-1.8 0-3.5.7-4.4 1.5-1.9 3-3.9 2.6-6.9"/><path d="M8.4 8.2c1.9-1.3 5.3-1.3 7.2 0"/><path d="M8.4 8.2C7 5.6 4.6 5.1 3.5 7.5"/><path d="M15.6 8.2C17 5.6 19.4 5.1 20.5 7.5"/><circle cx="3" cy="9.2" r="1.7"/><circle cx="21" cy="9.2" r="1.7"/></svg>AO <span class="tcount" id="cAo">0</span></button>
         <button class="tab" data-cat="accomplished"><svg class="ic" viewBox="0 0 24 24"><path d="M7 4h10v3a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M12 12v4M8 20h8M9.5 20l.8-4h3.4l.8 4"/></svg>Done <span class="tcount" id="cAcc">0</span></button>
         <button class="tab" data-cat="archived"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M9.5 12h5"/></svg>Archive <span class="tcount" id="cArc">0</span></button>
       </div>
@@ -96,6 +98,7 @@
         <div class="fpill" data-f="creamed">Creamed</div>
         <div class="fpill" data-f="pinned"><svg class="ic" viewBox="0 0 24 24"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><path d="M12 15v6"/></svg>Pinned</div>
       </div>
+      <div class="cbar" id="cbar" style="display:none"></div>
     </div>
     <div class="body"><div class="list" id="rows"></div></div>
     <div class="bulkbar" id="bulkbar">
@@ -134,6 +137,11 @@
         <div class="srow"><div class="rico" style="background:var(--amber-bg);color:var(--amber)"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3H5a2 2 0 0 0-2 2v2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M9 9v1.5M15 9v1.5M12 9v3l-1.2 1M8.8 15a3.6 3.6 0 0 0 6.4 0"/></svg></div><div class="ti"><div class="t">Face ID lock</div><div class="s">unlock punter with Face ID</div></div><div class="sw" id="faceSw"><i></i></div></div>
         <div class="srow" id="lockdurrow"><div class="ti"><div class="t">Require unlock</div><div class="s">after the app is closed</div></div><div class="v" id="lockdurval">After 5 minutes ›</div></div>
       </div></div>
+      <div class="sgrp"><div class="seclbl">Outreach routing</div><div class="scard">
+        <div class="srow"><div class="ti"><div class="t">UK numbers</div><div class="s">default app to open</div></div><div class="segrow chanseg sm" id="routeUKseg"><button class="seg" data-r="sms">SMS</button><button class="seg" data-r="wa">WA</button></div></div>
+        <div class="srow"><div class="ti"><div class="t">Non-UK numbers</div><div class="s">RO, ES, IT and the rest</div></div><div class="segrow chanseg sm" id="routeOtherseg"><button class="seg" data-r="sms">SMS</button><button class="seg" data-r="wa">WA</button></div></div>
+        <div class="srow"><div class="ti"><div class="t">Force WhatsApp this session</div><div class="s">resets when you close punter</div></div><div class="sw" id="forceWaSw"><i></i></div></div>
+      </div></div>
       <div class="sgrp"><div class="seclbl">Message templates</div><div class="scard" id="tmplList"></div></div>
       <div class="sgrp"><div class="seclbl">Data</div><div class="scard">
         <div class="srow" id="nukedRow"><div class="rico" style="background:var(--red-bg)"><span style="font-size:15px">☢️</span></div><div class="ti"><div class="t">Nuked numbers</div><div class="s">remembered, won't re-add</div></div><div class="v" id="nukedCount">0 ›</div></div>
@@ -159,6 +167,7 @@
           <div class="act" id="actMap"><svg class="ic" viewBox="0 0 24 24"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>Map</div>
         </div>
         <div class="contactedline" id="contactedLine"></div>
+        <div class="chanbox"><div class="chanlbl">Contact via <span id="chanWhy"></span></div><div class="segrow chanseg" id="chanSeg"><button class="seg" data-ch="auto">Auto</button><button class="seg" data-ch="sms">SMS</button><button class="seg" data-ch="wa">WhatsApp</button></div></div>
         <div class="sec"><div class="seclbl">Status</div><div class="segrow" id="statusSeg">
           <button class="seg yes" data-st="yes"><svg class="ic" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Yes</button>
           <button class="seg maybe" data-st="maybe"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6"/></svg>Maybe</button>
@@ -172,11 +181,13 @@
         </div></div>
         <div class="sec" id="listingSec"><div class="seclbl">Listing</div><div class="ttl" id="dtitle"></div><div class="desc" id="ddesc"></div></div>
         <div class="sec" id="ratesSec"><div class="seclbl">Rates</div><div class="card" id="drates"></div></div>
+        <div class="sec" id="allDetails" style="display:none"><div class="seclbl">All details</div><div class="card adbody"></div></div>
         <div class="sec"><div class="seclbl">Notes</div><div class="notebox" id="dnotes" contenteditable="true" data-ph="Tap to add a note"></div></div>
         <div class="sec" id="sourceSec"><div class="seclbl">Source</div><div class="openlink" id="dsource"><span id="dsourceurl"></span><svg class="ic" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></div></div>
         <div class="sec" id="mapSec"><div class="seclbl">Location</div><div class="mapwrap"><div class="maphd"><span class="area" id="mapArea"></span><span class="approx">approx area</span></div><iframe id="mapFrame" style="width:100%;height:150px;border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div></div>
         <div class="sec"><div class="seclbl">Move to</div><div class="catmove" id="catMove">
           <button class="catbtn" data-cat="active"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg>Active</button>
+          <button class="catbtn" data-cat="ao"><svg class="ic" viewBox="0 0 24 24"><path d="M8.4 8.2c-.4 3 1.1 5 2.6 6.9.7.9.9 2.6.7 4.4h.6c-.2-1.8 0-3.5.7-4.4 1.5-1.9 3-3.9 2.6-6.9"/><path d="M8.4 8.2c1.9-1.3 5.3-1.3 7.2 0"/><path d="M8.4 8.2C7 5.6 4.6 5.1 3.5 7.5"/><path d="M15.6 8.2C17 5.6 19.4 5.1 20.5 7.5"/><circle cx="3" cy="9.2" r="1.7"/><circle cx="21" cy="9.2" r="1.7"/></svg>AO</button>
           <button class="catbtn" data-cat="accomplished"><svg class="ic" viewBox="0 0 24 24"><path d="M7 4h10v3a5 5 0 0 1-10 0z"/><path d="M12 12v4M8 20h8"/></svg>Done</button>
           <button class="catbtn" data-cat="archived"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8"/></svg>Archived</button>
         </div></div>

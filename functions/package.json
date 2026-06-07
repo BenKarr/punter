@@ -1,0 +1,11 @@
+{
+  "name": "punter-functions",
+  "description": "punter image-copy Cloud Function",
+  "engines": { "node": "20" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.1.0"
+  },
+  "private": true
+}
