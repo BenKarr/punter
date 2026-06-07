@@ -261,9 +261,10 @@ function getTemplatesSorted(){ return getTemplates().map((t,i)=>Object.assign({}
 function templateText(i){ const t=getTemplates(); const x=t[i]||t[0]; return x?x.text:'Hi, saw your listing. Are you free this week?'; }
 function defaultTplIdx(){ const t=getTemplates(); const s=t.findIndex(x=>x&&x.star); return s>=0?s:0; }
 function template(){ return templateText(activeTplIdx||defaultTplIdx()); }
+function ensureOvl(){ let o=$('ovl'); if(!o){ o=document.createElement('div'); o.id='ovl'; o.style.cssText='position:absolute;inset:0;z-index:200;display:none'; (document.querySelector('.phone')||document.getElementById('app')||document.body).appendChild(o); } return o; }
 function closeOvl(){ const o=$('ovl'); if(o){ o.innerHTML=''; o.style.display='none'; } }
 function tplPicker(channelLabel,onPick){
-  const o=$('ovl'); if(!o) return; const list=getTemplatesSorted(); let sel=list.length?list[0]._i:0;
+  const o=ensureOvl(); const list=getTemplatesSorted(); let sel=list.length?list[0]._i:0;
   const rowsHtml=()=>list.map(t=>'<div class="trow'+(t._i===sel?' sel':'')+'" data-i="'+t._i+'">'+(t.star?'<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:#f5c500;stroke:#f5c500;stroke-width:1.5"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>':'')+'<div class="ti"><div class="nm">'+esc(t.name||'Template')+'</div><div class="tx">'+esc(t.text||'')+'</div></div></div>').join('');
   o.innerHTML='<div class="ovback"></div><div class="sheet"><div class="sheeth"><div class="t">Pick a template</div><div class="ovx">\u00d7</div></div><div id="tpRows">'+rowsHtml()+'</div><div class="sendbtns"><button class="bwa">Use this template'+(channelLabel?(' \u00b7 '+channelLabel):'')+'</button></div></div>';
   o.style.display='block';
@@ -272,7 +273,7 @@ function tplPicker(channelLabel,onPick){
   o.querySelector('.bwa').onclick=()=>{ closeOvl(); onPick(sel); };
 }
 function tplEditor(idx){
-  const o=$('ovl'); if(!o) return; const t=getTemplates(); const ex=(idx!=null)?t[idx]:{name:'',text:'',star:false};
+  const o=ensureOvl(); const t=getTemplates(); const ex=(idx!=null)?t[idx]:{name:'',text:'',star:false};
   o.innerHTML='<div class="ovback"></div><div class="sheet"><div class="sheeth"><div class="t">'+(idx!=null?'Edit template':'New template')+'</div><div class="ovx">\u00d7</div></div><div class="edrow"><div><label>Name</label><input id="edName" value="'+esc(ex.name||'')+'"></div><div><label>Message</label><textarea id="edText" rows="3">'+esc(ex.text||'')+'</textarea></div><div style="display:flex;align-items:center;justify-content:space-between"><label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="edStar" '+(ex.star?'checked':'')+'> Starred (pin to top)</label><div style="display:flex;gap:8px">'+(idx!=null?'<button class="edDel" style="background:none;border:none;color:#b85c5c;font-family:var(--mo);font-size:12px;cursor:pointer">Delete</button>':'')+'<button class="edSave" style="font-family:var(--hd);font-weight:700;font-size:13px;background:var(--teal);color:#fff;border:none;border-radius:9px;padding:9px 18px;cursor:pointer">Save</button></div></div></div></div>';
   o.style.display='block';
   o.querySelector('.ovback').onclick=closeOvl; o.querySelector('.ovx').onclick=closeOvl;
@@ -296,7 +297,7 @@ function matchCrit(c,crit){
   return true;
 }
 function batchAudience(){
-  const o=$('ovl'); if(!o) return; const crit={cat:'active',status:'untouched',notMessaged:true,hot:false};
+  const o=ensureOvl(); const crit={cat:'active',status:'untouched',notMessaged:true,hot:false};
   const cats=[['active','Active'],['ao','AO'],['accomplished','Done'],['archived','Archived'],['any','Any']];
   const stats=[['any','Any'],['yes','Yes'],['maybe','Maybe'],['no','No'],['untouched','Untouched']];
   const pill=(v,l,on,grp)=>'<span class="cf'+(on?' on':'')+'" data-grp="'+grp+'" data-v="'+v+'">'+l+'</span>';
