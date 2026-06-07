@@ -364,6 +364,7 @@ function addNuked(num){ const n=getNuked(); const d=(''+num).replace(/\D/g,''); 
 function nukeFlash(){ const ph=$('app'); const f=document.createElement('div'); f.className='nukeflash'; ph.appendChild(f); setTimeout(()=>f.remove(),560); }
 function nukeOne(id,el,done){ const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(el,()=>{ store.remove(id); done&&done(); }); }
 function fmtNum(n){ if(!n) return ''; const d=(''+n).replace(/\D/g,''); if(d.length===11&&d.startsWith('0')) return d.replace(/(\d{5})(\d{3})(\d{3})/,'$1 $2 $3'); return n; }
+function launchUrl(u){ try{ const w=window.open(u,'_blank'); if(!w){ location.href=u; } }catch(e){ location.href=u; } }
 function waLink(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d='44'+d.slice(1); return `https://wa.me/${d}?text=${encodeURIComponent(text)}`; }
 /* ---------------- Fix 11: channel routing ---------------- */
 function channelFor(c){ if(c && c.channel) return c.channel; if(sessionForceWa) return 'wa'; return _ctry(c&&c.number).c==='UK' ? routeUK : routeOther; }
@@ -484,8 +485,8 @@ function wire(){
   $('dnotes').addEventListener('blur',()=>{ if(currentId) store.update(currentId,{notes:$('dnotes').textContent.trim()}); });
   $('delBtn').addEventListener('click',()=>{ const id=currentId; const body=$('s-detail').querySelector('.body'); const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(body,()=>{ body.classList.remove('dissolving'); store.remove(id); back(); }); toast('Nuked, number remembered'); });
   $('actCopy').addEventListener('click',()=>{ const c=store.get(currentId); navigator.clipboard?.writeText(c.number); toast('Copied '+fmtNum(c.number)); });
-  $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('WhatsApp',(i)=>{ activeTplIdx=i; store.update(currentId,{lastWa:Date.now()}); refreshContacted(); location.href=waLink(c.number,templateText(i)); }); });
-  $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('SMS',(i)=>{ activeTplIdx=i; store.update(currentId,{lastSms:Date.now()}); refreshContacted(); location.href='sms:'+c.number+'&body='+encodeURIComponent(templateText(i)); }); });
+  $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('WhatsApp',(i)=>{ activeTplIdx=i; store.update(currentId,{lastWa:Date.now()}); refreshContacted(); launchUrl(waLink(c.number,templateText(i))); }); });
+  $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('SMS',(i)=>{ activeTplIdx=i; store.update(currentId,{lastSms:Date.now()}); refreshContacted(); { const num=(''+c.number).replace(/[^\d+]/g,''); launchUrl('sms:'+num+'?&body='+encodeURIComponent(templateText(i))); } }); });
   $('actMap').addEventListener('click',()=>{ const c=store.get(currentId); const q=(c.address||c.location||c.region||'').trim(); if(!q){ toast('No location set'); return; } location.href='https://maps.apple.com/?q='+encodeURIComponent(q); });
   $('dsource').addEventListener('click',()=>{ const c=store.get(currentId); if(c&&c.url) window.open(c.url,'_blank','noopener'); });
   // photo
