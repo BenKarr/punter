@@ -20,6 +20,7 @@ let store = null, mode = 'local', user = null;
 let currentTab = 't-home', lastTab = 't-home';
 let currentCat = 'active', currentFilter = 'all', currentId = null, selMode = false;
 let currentCountry = localStorage.getItem('punter_country') || 'all';
+let activeTplIdx = 0, dateFilter = 'all', _returnScreen = null, outCritDesc = '';
 let routeUK = localStorage.getItem('punter_route_uk') || 'sms';
 let routeOther = localStorage.getItem('punter_route_other') || 'wa';
 let sessionForceWa = false;
@@ -43,7 +44,7 @@ function showTab(id){
   $(id).querySelector('.body')?.scrollTo(0,0);
 }
 function go(id){ screens.forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); $('nav').classList.add('hide'); $('fab').classList.add('hide'); $(id).querySelector('.body')?.scrollTo(0,0); }
-function back(){ showTab(lastTab); }
+function back(){ if(_returnScreen){ const r=_returnScreen; _returnScreen=null; go(r); return; } showTab(lastTab); }
 
 /* ---------------- stores ---------------- */
 function FirestoreStore(uid){
@@ -126,6 +127,7 @@ function visibleContacts(){
   const q=($('searchInput').value||'').toLowerCase();
   return contacts.filter(c=>{
     if((c.cat||'active')!==currentCat) return false;
+    if(dateFilter==='today'){ if(!c.ts || new Date(c.ts).toDateString()!==new Date().toDateString()) return false; }
     if(currentCountry!=='all'){ if(_ctry(c.number).c!==currentCountry) return false; }
     if(currentFilter!=='all'){
       if(['yes','maybe','no'].includes(currentFilter)){ if(c.status!==currentFilter) return false; }
@@ -166,6 +168,7 @@ function renderHome(){
   const queue=active.filter(c=>!c.waUsed && !c.status);
   const reps=contacts.filter(c=>c.repost).length;
   $('kToday').textContent=today; $('kUntouched').textContent=queue.length; $('kReposts').textContent=reps; $('kActive').textContent=active.length;
+  const bycat=x=>contacts.filter(c=>(c.cat||'active')===x).length; ['hcAct:active','hcAo:ao','hcAcc:accomplished','hcArc:archived'].forEach(pair=>{ const[id,cat]=pair.split(':'); const e=$(id); if(e) e.textContent=bycat(cat); });
   const y=contacts.filter(c=>c.status==='yes').length, m=contacts.filter(c=>c.status==='maybe').length, n=contacts.filter(c=>c.status==='no').length;
   const mx=Math.max(1,y,m,n);
   $('vYes').textContent=y; $('vMaybe').textContent=m; $('vNo').textContent=n;
@@ -254,10 +257,67 @@ function openPhoto(imgs,i){ pImgs=imgs; pi=i; const wrap=$('photoSlides'); wrap.
 function pslide(d){ pi=(pi+d+pImgs.length)%pImgs.length; $('photoSlides').querySelectorAll('.pslide').forEach((s,k)=>s.classList.toggle('on',k===pi)); $('pcount').textContent=(pi+1)+' / '+pImgs.length; }
 
 /* ---------------- outreach ---------------- */
-function template(){ const t=getTemplates()[0]; return t?t.text:'Hi, saw your listing. Free this week?'; }
-function startOutreach(){
-  outQueue=contacts.filter(c=>(c.cat||'active')==='active' && !c.waUsed && !c.status);
-  if(!outQueue.length){ toast('No untouched contacts to message'); showTab('t-home'); return; }
+function getTemplatesSorted(){ return getTemplates().map((t,i)=>Object.assign({},t,{_i:i})).sort((a,b)=>(b.star?1:0)-(a.star?1:0)); }
+function templateText(i){ const t=getTemplates(); const x=t[i]||t[0]; return x?x.text:'Hi, saw your listing. Are you free this week?'; }
+function defaultTplIdx(){ const t=getTemplates(); const s=t.findIndex(x=>x&&x.star); return s>=0?s:0; }
+function template(){ return templateText(activeTplIdx||defaultTplIdx()); }
+function closeOvl(){ const o=$('ovl'); if(o){ o.innerHTML=''; o.style.display='none'; } }
+function tplPicker(channelLabel,onPick){
+  const o=$('ovl'); if(!o) return; const list=getTemplatesSorted(); let sel=list.length?list[0]._i:0;
+  const rowsHtml=()=>list.map(t=>'<div class="trow'+(t._i===sel?' sel':'')+'" data-i="'+t._i+'">'+(t.star?'<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:#f5c500;stroke:#f5c500;stroke-width:1.5"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>':'')+'<div class="ti"><div class="nm">'+esc(t.name||'Template')+'</div><div class="tx">'+esc(t.text||'')+'</div></div></div>').join('');
+  o.innerHTML='<div class="ovback"></div><div class="sheet"><div class="sheeth"><div class="t">Pick a template</div><div class="ovx">\u00d7</div></div><div id="tpRows">'+rowsHtml()+'</div><div class="sendbtns"><button class="bwa">Use this template'+(channelLabel?(' \u00b7 '+channelLabel):'')+'</button></div></div>';
+  o.style.display='block';
+  o.querySelector('.ovback').onclick=closeOvl; o.querySelector('.ovx').onclick=closeOvl;
+  o.querySelectorAll('.trow').forEach(r=>r.onclick=()=>{ sel=+r.dataset.i; o.querySelectorAll('.trow').forEach(x=>x.classList.toggle('sel',x===r)); });
+  o.querySelector('.bwa').onclick=()=>{ closeOvl(); onPick(sel); };
+}
+function tplEditor(idx){
+  const o=$('ovl'); if(!o) return; const t=getTemplates(); const ex=(idx!=null)?t[idx]:{name:'',text:'',star:false};
+  o.innerHTML='<div class="ovback"></div><div class="sheet"><div class="sheeth"><div class="t">'+(idx!=null?'Edit template':'New template')+'</div><div class="ovx">\u00d7</div></div><div class="edrow"><div><label>Name</label><input id="edName" value="'+esc(ex.name||'')+'"></div><div><label>Message</label><textarea id="edText" rows="3">'+esc(ex.text||'')+'</textarea></div><div style="display:flex;align-items:center;justify-content:space-between"><label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="edStar" '+(ex.star?'checked':'')+'> Starred (pin to top)</label><div style="display:flex;gap:8px">'+(idx!=null?'<button class="edDel" style="background:none;border:none;color:#b85c5c;font-family:var(--mo);font-size:12px;cursor:pointer">Delete</button>':'')+'<button class="edSave" style="font-family:var(--hd);font-weight:700;font-size:13px;background:var(--teal);color:#fff;border:none;border-radius:9px;padding:9px 18px;cursor:pointer">Save</button></div></div></div></div>';
+  o.style.display='block';
+  o.querySelector('.ovback').onclick=closeOvl; o.querySelector('.ovx').onclick=closeOvl;
+  o.querySelector('.edSave').onclick=()=>{ const name=$('edName').value.trim()||'Untitled'; const text=$('edText').value.trim(); const star=$('edStar').checked; const arr=getTemplates(); if(idx!=null) arr[idx]={name,text,star}; else arr.push({name,text,star}); saveTemplates(arr); closeOvl(); renderSettings(); };
+  const del=o.querySelector('.edDel'); if(del) del.onclick=()=>{ const arr=getTemplates(); arr.splice(idx,1); saveTemplates(arr); closeOvl(); renderSettings(); };
+}
+function applyDeepLink(spec){
+  dateFilter='all';
+  if(spec==='today'){ currentCat='active'; currentFilter='all'; dateFilter='today'; }
+  else if(spec.indexOf('cat:')===0){ currentCat=spec.slice(4); currentFilter='all'; }
+  else if(spec.indexOf('status:')===0){ currentCat='active'; currentFilter=spec.slice(7); }
+  const tabs=$('catTabs'); if(tabs) tabs.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.cat===currentCat));
+  const fl=document.querySelector('.filters'); if(fl) fl.querySelectorAll('.fpill').forEach(f=>f.classList.toggle('on',f.dataset.f===currentFilter));
+  showTab('t-contacts'); renderAll();
+}
+function matchCrit(c,crit){
+  if(crit.cat && crit.cat!=='any' && (c.cat||'active')!==crit.cat) return false;
+  if(crit.status && crit.status!=='any'){ if(crit.status==='untouched'){ if(c.status) return false; } else if(c.status!==crit.status) return false; }
+  if(crit.notMessaged && (c.waUsed||c.lastWa||c.lastSms)) return false;
+  if(crit.hot && !((c.tags||[]).includes('flame')||c.pinned)) return false;
+  return true;
+}
+function batchAudience(){
+  const o=$('ovl'); if(!o) return; const crit={cat:'active',status:'untouched',notMessaged:true,hot:false};
+  const cats=[['active','Active'],['ao','AO'],['accomplished','Done'],['archived','Archived'],['any','Any']];
+  const stats=[['any','Any'],['yes','Yes'],['maybe','Maybe'],['no','No'],['untouched','Untouched']];
+  const pill=(v,l,on,grp)=>'<span class="cf'+(on?' on':'')+'" data-grp="'+grp+'" data-v="'+v+'">'+l+'</span>';
+  function count(){ return contacts.filter(c=>matchCrit(c,crit)).length; }
+  function draw(){
+    o.querySelector('#baCat').innerHTML=cats.map(x=>pill(x[0],x[1],crit.cat===x[0],'cat')).join('');
+    o.querySelector('#baStat').innerHTML=stats.map(x=>pill(x[0],x[1],crit.status===x[0],'status')).join('');
+    o.querySelector('#baExtra').innerHTML=pill('hot','\ud83d\udd25 Hot only',crit.hot,'hot')+pill('nm','Not yet messaged',crit.notMessaged,'nm');
+    o.querySelector('#baCount').textContent='Start batch ('+count()+' match)';
+    o.querySelectorAll('#baCat .cf,#baStat .cf,#baExtra .cf').forEach(el=>el.onclick=()=>{ const g=el.dataset.grp,v=el.dataset.v; if(g==='cat')crit.cat=v; else if(g==='status')crit.status=v; else if(g==='hot')crit.hot=!crit.hot; else if(g==='nm')crit.notMessaged=!crit.notMessaged; draw(); });
+  }
+  o.innerHTML='<div class="ovback"></div><div class="sheet"><div class="sheeth"><div class="t">Who do you want to reach?</div><div class="ovx">\u00d7</div></div><div style="font-family:var(--mo);font-size:11px;color:var(--mut2);margin:2px 0 6px">Category</div><div class="clickrow" id="baCat"></div><div style="font-family:var(--mo);font-size:11px;color:var(--mut2);margin:12px 0 6px">Status</div><div class="clickrow" id="baStat"></div><div style="font-family:var(--mo);font-size:11px;color:var(--mut2);margin:12px 0 6px">Also</div><div class="clickrow" id="baExtra"></div><div class="sendbtns"><button class="bwa" id="baCount">Start batch</button></div></div>';
+  o.style.display='block'; o.querySelector('.ovback').onclick=closeOvl; o.querySelector('.ovx').onclick=closeOvl; draw();
+  o.querySelector('#baCount').onclick=()=>{ closeOvl(); startOutreach(crit); };
+}
+function openDetailFromOutreach(id){ openDetail(id); _returnScreen='s-outreach'; }
+function startOutreach(crit){
+  crit=crit||{cat:'active',status:'untouched',notMessaged:true};
+  outQueue=contacts.filter(c=>matchCrit(c,crit));
+  outCritDesc=[crit.cat&&crit.cat!=='any'?(crit.cat==='accomplished'?'Done':crit.cat==='archived'?'Archived':crit.cat==='ao'?'AO':'Active'):'',crit.status&&crit.status!=='any'?(crit.status==='untouched'?'untouched':crit.status):'',crit.hot?'hot':''].filter(Boolean).join(' \u00b7 ');
+  if(!outQueue.length){ toast('No contacts match that filter'); showTab('t-home'); return; }
   outIdx=0; renderOut(); go('s-outreach');
 }
 function renderOut(){
@@ -265,7 +325,12 @@ function renderOut(){
   $('oprog').textContent=(outIdx+1)+' / '+outQueue.length;
   $('opbar').style.width=((outIdx+1)/outQueue.length*100)+'%';
   const ch=channelFor(c); const chLbl=ch==='sms'?'SMS':'WhatsApp';
-  $('outBody').innerHTML=`<div class="ocard"><div class="ph" style="height:188px;background:${c.images&&c.images[0]?`center/cover url('${c.images[0]}')`:'linear-gradient(135deg,#7d97a6,#3a4f5a)'}"></div><div class="oin"><div style="font-family:var(--mo);font-weight:600;font-size:16px">${fmtNum(c.number)} ${flagFor(c.number)}</div><div style="font-size:13px;color:var(--mut2);margin-top:4px">${esc(c.name||'')}${c.price?' · '+esc(c.price):''}</div><div style="margin-top:8px"><span class="chpill ${ch}">→ ${chLbl}</span></div></div></div><div class="preview-msg">${esc(template())}</div>`;
+  const tname=esc((getTemplates()[activeTplIdx]||getTemplates()[defaultTplIdx()]||{}).name||'Template');
+  $('outBody').innerHTML=`<div class="ocard" id="outCard" style="cursor:pointer"><div class="ph" style="height:188px;background:${c.images&&c.images[0]?`center/cover url('${c.images[0]}')`:'linear-gradient(135deg,#7d97a6,#3a4f5a)'}"></div><div class="oin"><div style="font-family:var(--mo);font-weight:600;font-size:16px;display:flex;align-items:center;gap:8px">${fmtNum(c.number)} ${flagFor(c.number)} ${aoBadge(c)}</div><div style="font-size:13px;color:var(--mut2);margin-top:4px">${esc(c.name||'')}${c.price?' · '+esc(c.price):''}</div><div style="margin-top:8px"><span class="chpill ${ch}">→ ${chLbl}</span> <span style="font-family:var(--mo);font-size:11px;color:var(--teal)">tap for details ›</span></div></div></div>`
+   +`<div class="tplline" id="outTpl" style="margin-top:10px;padding:11px;border:1px solid var(--line);border-radius:11px;display:flex;align-items:center;justify-content:space-between;cursor:pointer"><div><div style="font-family:var(--mo);font-size:10px;color:var(--mut2);text-transform:uppercase">Template</div><div style="font-family:var(--hd);font-weight:700;font-size:13px;margin-top:2px">${tname}</div></div><div style="color:var(--mut2)">change ›</div></div>`
+   +`<div class="preview-msg" style="margin-top:10px">${esc(template())}</div>`;
+  const oc=$('outCard'); if(oc) oc.onclick=()=>openDetailFromOutreach(c.id);
+  const ot=$('outTpl'); if(ot) ot.onclick=()=>tplPicker('',(i)=>{ activeTplIdx=i; renderOut(); });
 }
 function outNext(send){
   const c=outQueue[outIdx];
@@ -283,7 +348,7 @@ function renderSettings(){
   $('faceSw').classList.toggle('on', localStorage.getItem('punter_faceid')==='1');
   $('lockdurval').textContent=(localStorage.getItem('punter_lockdur')||'After 5 minutes')+' ›';
   const tpl=getTemplates();
-  $('tmplList').innerHTML=tpl.map((t,i)=>`<div class="srow" data-tpl="${i}"><div class="ti"><div class="t">${esc(t.name)}</div><div class="s">${esc(t.text)}</div></div><div class="v">›</div></div>`).join('')+`<div class="srow" data-tpl="new"><div class="ti"><div class="t" style="color:var(--amber)">+ Add template</div></div></div>`;
+  $('tmplList').innerHTML=getTemplatesSorted().map(t=>`<div class="srow" data-tpl="${t._i}"><div class="ti"><div class="t">${t.star?'<svg viewBox=\"0 0 24 24\" style=\"width:12px;height:12px;fill:#f5c500;stroke:#f5c500;stroke-width:1.5;vertical-align:-1px\"><path d=\"M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z\"/></svg> ':''}${esc(t.name)}</div><div class="s">${esc(t.text)}</div></div><div class="v">›</div></div>`).join('')+`<div class="srow" data-tpl="new"><div class="ti"><div class="t" style="color:var(--amber)">+ Add template</div></div></div>`;
   $('nukedCount').textContent=getNuked().length+' ›';
   const rt=$('routeUKseg'); if(rt){ rt.querySelectorAll('.seg').forEach(b=>b.classList.toggle('on',b.dataset.r===routeUK)); }
   const ro=$('routeOtherseg'); if(ro){ ro.querySelectorAll('.seg').forEach(b=>b.classList.toggle('on',b.dataset.r===routeOther)); }
@@ -393,6 +458,8 @@ function wire(){
   document.querySelector('.tagbtn[data-tag="creamed"]')?.insertAdjacentHTML('afterbegin',creamImg);
   document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>showTab(a.dataset.t)));
   document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.go)));
+  document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>applyDeepLink(b.dataset.nav)));
+  document.querySelectorAll('.batchPick').forEach(b=>b.addEventListener('click',batchAudience));
   $('fab').addEventListener('click',()=>{ go('s-add'); addMode('link'); });
   // signin
   $('googleBtn').addEventListener('click',async()=>{ try{ const {auth,authM}=window.__fb; await authM.signInWithPopup(auth,new authM.GoogleAuthProvider()); }catch(e){ toast('Sign-in failed'); } });
@@ -416,8 +483,8 @@ function wire(){
   $('dnotes').addEventListener('blur',()=>{ if(currentId) store.update(currentId,{notes:$('dnotes').textContent.trim()}); });
   $('delBtn').addEventListener('click',()=>{ const id=currentId; const body=$('s-detail').querySelector('.body'); const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(body,()=>{ body.classList.remove('dissolving'); store.remove(id); back(); }); toast('Nuked, number remembered'); });
   $('actCopy').addEventListener('click',()=>{ const c=store.get(currentId); navigator.clipboard?.writeText(c.number); toast('Copied '+fmtNum(c.number)); });
-  $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); store.update(currentId,{lastWa:Date.now()}); refreshContacted(); location.href=waLink(c.number,template()); });
-  $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); store.update(currentId,{lastSms:Date.now()}); refreshContacted(); location.href='sms:'+c.number; });
+  $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('WhatsApp',(i)=>{ activeTplIdx=i; store.update(currentId,{lastWa:Date.now()}); refreshContacted(); location.href=waLink(c.number,templateText(i)); }); });
+  $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('SMS',(i)=>{ activeTplIdx=i; store.update(currentId,{lastSms:Date.now()}); refreshContacted(); location.href='sms:'+c.number+'&body='+encodeURIComponent(templateText(i)); }); });
   $('actMap').addEventListener('click',()=>{ const c=store.get(currentId); const q=(c.address||c.location||c.region||'').trim(); if(!q){ toast('No location set'); return; } location.href='https://maps.apple.com/?q='+encodeURIComponent(q); });
   $('dsource').addEventListener('click',()=>{ const c=store.get(currentId); if(c&&c.url) window.open(c.url,'_blank','noopener'); });
   // photo
@@ -451,7 +518,7 @@ function wire(){
   $('signoutRow').addEventListener('click',async()=>{ try{ const {auth,authM}=window.__fb; await authM.signOut(auth); location.reload(); }catch(e){} });
   $('nukedRow').addEventListener('click',()=>{ const n=getNuked(); if(!n.length){ toast('No nuked numbers'); return; } if(confirm('Clear '+n.length+' nuked numbers?')){ localStorage.setItem('punter_nuked','[]'); renderSettings(); toast('Nuked list cleared'); } });
   $('wipeRow').addEventListener('click',()=>{ if(!confirm('Delete ALL your contacts? This cannot be undone.')) return; contacts.slice().forEach(c=>store.remove(c.id)); toast('Cleared'); });
-  $('tmplList').addEventListener('click',e=>{ const r=e.target.closest('[data-tpl]'); if(!r) return; const tpl=getTemplates(); if(r.dataset.tpl==='new'){ const text=prompt('New template message:'); if(text){ tpl.push({name:'Template '+(tpl.length+1),text}); saveTemplates(tpl); renderSettings(); } } else { const i=+r.dataset.tpl; const text=prompt('Edit template:',tpl[i].text); if(text!=null){ tpl[i].text=text; saveTemplates(tpl); renderSettings(); } } });
+  $('tmplList').addEventListener('click',e=>{ const r=e.target.closest('[data-tpl]'); if(!r) return; if(r.dataset.tpl==='new') tplEditor(null); else tplEditor(+r.dataset.tpl); });
   // reposts delegate
   $('repostlist').addEventListener('click',e=>{ const b=e.target.closest('[data-rep]'); if(!b) return; if(b.dataset.rep==='view') openDetail(b.dataset.id); else { store.update(b.dataset.id,{repost:false}); toast('Dismissed'); } });
 }
