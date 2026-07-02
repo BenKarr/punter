@@ -1,4 +1,4 @@
-# punter PWA (build p.05)
+# punter PWA (build p.06)
 
 Open `index.html` and it runs in demo mode immediately (data saved on this device).
 Add your Firebase config in `firebase-config.js` and deploy to switch on real cloud sync.
