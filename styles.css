@@ -358,17 +358,17 @@
 #ovl .sheeth .t{font-family:var(--hd);font-weight:700;font-size:15px;color:var(--txt)}
 #ovl .ovx{font-family:var(--mo);font-size:20px;color:var(--mut2);cursor:pointer;line-height:1}
 #ovl .trow{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
-#ovl .trow.sel{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
+#ovl .trow.sel{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
 #ovl .trow .ti{flex:1;min-width:0}
 #ovl .trow .nm{font-family:var(--hd);font-weight:700;font-size:13px;color:var(--txt)}
 #ovl .trow .tx{font-size:12px;color:var(--mut2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ovl .sendbtns{display:flex;gap:8px;margin-top:6px}
-#ovl .sendbtns .bwa{flex:1;font-family:var(--hd);font-weight:700;font-size:13px;padding:13px;border-radius:11px;border:none;cursor:pointer;background:var(--teal);color:#fff}
+#ovl .sendbtns .bwa{flex:1;font-family:var(--hd);font-weight:700;font-size:13px;padding:13px;border-radius:11px;border:none;cursor:pointer;background:var(--amber);color:#fff}
 #ovl .edrow{display:flex;flex-direction:column;gap:11px}
 #ovl .edrow label{font-family:var(--mo);font-size:10px;color:var(--mut2);text-transform:uppercase;letter-spacing:.4px}
 #ovl .edrow input[type=text],#ovl .edrow input:not([type]),#ovl .edrow textarea{font-family:var(--hd);font-size:13px;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2,#f7f4ed);color:var(--txt);width:100%;box-sizing:border-box}
 #ovl .clickrow{display:flex;gap:7px;flex-wrap:wrap}
 .cf{font-family:var(--mo);font-size:11px;padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:var(--panel,#fff);cursor:pointer;display:inline-flex;align-items:center;gap:5px;color:var(--txt)}
-.cf.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.cf.on{background:var(--amber);color:#fff;border-color:var(--amber)}
 .cf .ct{font-weight:700}
 .catnav{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
