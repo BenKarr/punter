@@ -9,4 +9,4 @@ export const firebaseConfig = {
 };
 
 // Google Maps + Geocoding key (restrict to benkarr.github.io/* in Google Cloud console)
-export const googleMapsKey = "AIzaSyAATu3QmIQmhWaB1zTzHNqKju9x-ppXujk";
+export const googleMapsKey = "PASTE_YOUR_GOOGLE_MAPS_KEY_HERE";

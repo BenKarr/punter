@@ -109,7 +109,7 @@ async function renderMapTab(){
   const info=$('mapInfo');
   try{ await loadMapsApi(); }catch(e){ if(info) info.textContent='Add your Google Maps key to firebase-config.js (googleMapsKey) and redeploy.'; return; }
   if(!gmap){
-    gmap=new google.maps.Map($('gmap'),{ center:{lat:51.5072,lng:-0.1276}, zoom:9, mapId:'PUNTER_MAP', disableDefaultUI:true, zoomControl:true });
+    gmap=new google.maps.Map($('gmap'),{ center:{lat:51.5072,lng:-0.1276}, zoom:9, mapId:'DEMO_MAP_ID', disableDefaultUI:true, zoomControl:true });
   }
   runGeocoding().then(()=>renderMapTab());
   gMarkers.forEach(m=>m.map=null); if(gClusterer) gClusterer.clearMarkers();
