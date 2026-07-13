@@ -46,6 +46,7 @@ function renderListLocs(){
     + ent.map(([a,n])=>'<span class="loc'+(currentArea===a?' on':'')+'" data-area="'+esc(a)+'">'+esc(a)+' <span class="n">'+n+'</span></span>').join('');
   host.querySelectorAll('.loc').forEach(l=>l.onclick=()=>{ currentArea=l.dataset.area; renderListLocs(); renderList(); });
 }
+function mapFail(msg){ const i=$('mapInfo'); if(i){ i.innerHTML='<span style="color:var(--red);font-weight:700">Map error: '+esc(msg)+'</span>'; } }
 function loadMapsApi(){
   if(_mapsLoad) return _mapsLoad;
   _mapsLoad=new Promise((res,rej)=>{
@@ -53,9 +54,9 @@ function loadMapsApi(){
     const s1=document.createElement('script');
     s1.src='https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js';
     s1.onload=()=>{ const s2=document.createElement('script');
-      s2.src='https://maps.googleapis.com/maps/api/js?key='+googleMapsKey+'&v=weekly&libraries=marker,geocoding&loading=async&callback=__gmapsReady';
-      window.__gmapsReady=()=>res(true); s2.onerror=rej; document.head.appendChild(s2); };
-    s1.onerror=rej; document.head.appendChild(s1);
+      s2.src='https://maps.googleapis.com/maps/api/js?key='+googleMapsKey+'&v=weekly&libraries=marker&loading=async&callback=__gmapsReady';
+      window.gm_authFailure=()=>mapFail('Google rejected the key (billing not enabled, or key restriction blocks this site). Check billing at console.cloud.google.com/billing'); window.__gmapsReady=()=>res(true); s2.onerror=()=>{ mapFail('Could not load maps.googleapis.com script'); rej(new Error('maps script')); }; document.head.appendChild(s2); };
+    s1.onerror=()=>{ mapFail('Could not load clustering library from unpkg.com'); rej(new Error('clusterer script')); }; document.head.appendChild(s1);
   });
   return _mapsLoad;
 }
@@ -107,7 +108,9 @@ function renderMapLocs(){
 }
 async function renderMapTab(){
   const info=$('mapInfo');
-  try{ await loadMapsApi(); }catch(e){ if(info) info.textContent='Add your Google Maps key to firebase-config.js (googleMapsKey) and redeploy.'; return; }
+  window.addEventListener('error',e=>{ if(e&&e.message&&/google|maps/i.test(e.message)) mapFail(e.message); },{once:true});
+  try{ await loadMapsApi(); }catch(e){ if(!/script/.test(String(e&&e.message))) mapFail('Key missing in firebase-config.js'); return; }
+  try{
   if(!gmap){
     gmap=new google.maps.Map($('gmap'),{ center:{lat:51.5072,lng:-0.1276}, zoom:9, mapId:'DEMO_MAP_ID', disableDefaultUI:true, zoomControl:true });
   }
@@ -121,6 +124,7 @@ async function renderMapTab(){
   if(info){ info.innerHTML='Active only \u00b7 '+placed.length+' placed'+(noGeo.length?(' \u00b7 <span id="mapNoGeo" style="text-decoration:underline;cursor:pointer">'+noGeo.length+' no location</span>'):'');
     const ng=$('mapNoGeo'); if(ng) ng.onclick=()=>mapPanelShow('No location \u00b7 '+noGeo.length,noGeo); }
   renderMapLocs();
+  }catch(e){ mapFail(String(e&&e.message||e)); }
 }
 function showTab(id){
   if(id==='outreach'){ startOutreach(); return; }
