@@ -1,4 +1,6 @@
-import { firebaseConfig, googleMapsKey } from './firebase-config.js';
+import * as _cfg from './firebase-config.js';
+const firebaseConfig=_cfg.firebaseConfig;
+const googleMapsKey=_cfg.googleMapsKey||'';
 
 const $ = (id) => document.getElementById(id);
 const screens = [...document.querySelectorAll('.screen')];
