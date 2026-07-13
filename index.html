@@ -79,7 +79,7 @@
   <section class="screen tabscreen" id="t-contacts">
     <div class="hd">
       <div class="hd-top">
-        <div class="brand"><span class="gb low">punter</span> <span class="build" id="pbuild">p.08</span></div>
+        <div class="brand"><span class="gb low">punter</span> <span class="build" id="pbuild">p.09</span></div>
         <div class="iconbtn" id="selBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
       </div>
       <div class="search"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="searchInput" placeholder="Search number, name, area..."></div>
@@ -98,6 +98,7 @@
         <div class="fpill" data-f="cold"><span class="em">❄️</span>Cold</div>
         <div class="fpill" data-f="creamed">Creamed</div>
       </div>
+      <div class="locstrip" id="listLocs" style="display:none"></div>
       <div class="cbar" id="cbar" style="display:none"></div>
     </div>
     <div class="body"><div class="list" id="rows"></div></div>
@@ -269,10 +270,27 @@
   </div></div>
 
   <div class="fab hide" id="fab"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+  <section class="screen tabscreen" id="t-map">
+    <div class="hd">
+      <div class="hd-top"><div class="brand"><span class="gb low">punter</span> <span style="font-family:var(--hd);font-weight:800;font-size:15px;color:var(--txt);margin-left:6px">Map</span></div></div>
+      <div class="locstrip" id="mapLocs"></div>
+      <div id="mapInfo" style="font-family:var(--mo);font-size:10px;color:var(--mut2);padding:0 2px 8px"></div>
+    </div>
+    <div class="body" style="padding:10px 12px 70px">
+      <div style="position:relative;height:100%;min-height:430px;border-radius:14px;overflow:hidden;border:1px solid var(--line)">
+        <div id="gmap" style="position:absolute;inset:0"></div>
+        <div class="arealist" id="mapPanel">
+          <div class="ah"><div class="at" id="mapPanelT"></div><div class="ax" id="mapPanelX">×</div></div>
+          <div id="mapPanelRows"></div>
+        </div>
+      </div>
+    </div>
+  </section>
   <div id="ovl" style="position:absolute;inset:0;z-index:200;display:none"></div>
   <div class="nav hide" id="nav">
     <a class="on" data-t="t-home"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Home</a>
     <a data-t="t-contacts"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Contacts</a>
+    <a data-t="t-map"><svg class="ic" viewBox="0 0 24 24"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Map</a>
     <a data-t="outreach"><svg class="ic" viewBox="0 0 24 24"><path d="M13 2 5 13h5l-1 9 9-12h-6z"/></svg>Outreach</a>
     <a data-t="t-reposts"><span class="badge" id="navRep" style="display:none">0</span><svg class="ic" viewBox="0 0 24 24"><path d="M4 9h11a4 4 0 0 1 0 8h-4M4 9l3-3M4 9l3 3"/></svg>Reposts</a>
     <a data-t="t-settings"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Settings</a>

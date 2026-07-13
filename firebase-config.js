@@ -7,3 +7,6 @@ export const firebaseConfig = {
   messagingSenderId: "110599395479",
   appId: "1:110599395479:web:0b2df7c94fee10a99cb1d2"
 };
+
+// Google Maps + Geocoding key (restrict to benkarr.github.io/* in Google Cloud console)
+export const googleMapsKey = "PASTE_YOUR_GOOGLE_MAPS_KEY_HERE";
