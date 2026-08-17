@@ -30,3 +30,7 @@ Open index.html in a browser, tap "Continue in demo mode". Add, edit, status, ta
 - Picture-first contact cards: full uncropped photo on top (object-fit contain, max 320px), photo count and pin overlaid, all chips and swipe actions preserved. No-photo contacts get a compact gradient banner.
 - Outreach: full uncropped image, carousel of ALL photos with arrows and counter, whole card taps through to contact detail (arrows excepted).
 - Proper back-navigation stack replacing the single _returnScreen slot. Tabs reset the stack, photo viewer close returns to wherever it was opened from, scroll positions restored per screen. Fixes back landing in the image viewer and outreach-detail-photo loops.
+
+
+## p.19
+- Contact list back to the compact row layout (density fix, ~4-5 rows per screen). Thumb upgraded: 104px, uncropped via contain on dark backing, photo count badge kept. Full uncropped photos live in the detail carousel and outreach card. Nav stack and outreach changes from p.18 unchanged.

@@ -212,15 +212,11 @@ function _grad(id){var g=['#7d97a6,#3a4f5a','#9e8a6d,#5a4a34','#6d8a9e,#34505a',
 function _dur(d){return (''+d).replace(' ','').replace('min','m').replace('hour','h').replace('hr','h');}
 function rowHtml(c,i){
   var st=c.status, edge=_edge(st), ct=_ctry(c.number);
-  var hasImg=!!(c.images&&c.images[0]);
-  var cnt=(c.images&&c.images.length>1)?('<span style="position:absolute;bottom:7px;right:8px;background:#000000a8;color:#fff;font-family:var(--mo);font-size:10px;padding:2px 7px;border-radius:9px;z-index:2">'+c.images.length+' photos</span>'):'';
+  var photo=(c.images&&c.images[0])?("#0b2225 center/contain no-repeat url('"+c.images[0]+"')"):("linear-gradient(135deg,"+_grad(c.id)+")");
+  var cnt=(c.images&&c.images.length)?('<span style="position:absolute;bottom:5px;right:5px;background:#000000a8;color:#fff;font-family:var(--mo);font-size:9px;padding:1px 5px;border-radius:8px">'+c.images.length+'</span>'):'';
   var pin=c.pinned
-   ?'<span style="position:absolute;top:8px;right:8px;z-index:2;background:#000000a8;border-radius:8px;padding:4px;display:flex"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:#ef9f27;stroke:#ef9f27;stroke-width:1.5"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><path d="M12 15v6"/></svg></span>'
-   :'';
-  var chk='<div class="chk" style="position:absolute;top:8px;left:8px;z-index:3;align-self:auto;background:#ffffffe6"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke-width:3"><path d="M5 12l5 5L20 6"/></svg></div>';
-  var imgBlock=hasImg
-   ?('<div style="position:relative;background:#0b2225">'+chk+pin+cnt+'<img src="'+c.images[0].replace(/"/g,'&quot;')+'" loading="lazy" style="width:100%;max-height:320px;object-fit:contain;display:block" onerror="this.style.display=&quot;none&quot;">'+'</div>')
-   :('<div style="position:relative;height:88px;background:linear-gradient(135deg,'+_grad(c.id)+')">'+chk+pin+'</div>');
+   ?'<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#ef9f27;stroke:#ef9f27;stroke-width:1.5;flex:none"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><path d="M12 15v6"/></svg>'
+   :'<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:#ef9f27;stroke-width:2;flex:none"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><path d="M12 15v6"/></svg>';
   var tags=c.tags||[], ic='';
   if(tags.indexOf('flame')>=0) ic+='<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:#e2641b;stroke-width:1.8"><path d="M12 2c1 3-1 4-2 6s-1 4 1 5c2-1 2-3 2-4 2 1 3 3 3 5a6 6 0 0 1-12 0c0-3 2-5 4-7 1-1 2-3 4-5z"/></svg>';
   else if(tags.indexOf('cold')>=0) ic+='<svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:#3a7bc4;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M10 4l2 1l2 -1"/><path d="M12 2v6.5l3 1.72"/><path d="M17.928 6.268l.134 2.232l1.866 1.232"/><path d="M20.66 7l-5.629 3.25l.01 3.458"/><path d="M19.928 14.268l-1.866 1.232l-.134 2.232"/><path d="M20.66 17l-5.629 -3.25l-2.99 1.738"/><path d="M14 20l-2 -1l-2 1"/><path d="M12 22v-6.5l-3 -1.72"/><path d="M6.072 17.732l-.134 -2.232l-1.866 -1.232"/><path d="M3.34 17l5.629 -3.25l-.01 -3.458"/><path d="M4.072 9.732l1.866 -1.232l.134 -2.232"/><path d="M3.34 7l5.629 3.25l2.99 -1.738"/></svg>';
@@ -230,33 +226,34 @@ function rowHtml(c,i){
   if(c.lastWa) lc='<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:#1d9e75;stroke-width:2;vertical-align:-2px"><path d="M3.5 20.5l1.4-4.1A8 8 0 1 1 8 19.1z"/></svg> '+_short(c.lastWa);
   else if(c.lastSms) lc='<svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:#888780;stroke-width:2;vertical-align:-2px"><path d="M4 5h16v10H9l-4.5 3.5z"/></svg> '+_short(c.lastSms);
   var rates=(c.rates&&c.rates.length)?c.rates.slice(0,2):(c.price?[{d:'',a:c.price}]:[]);
-  var rh=rates.map(function(r){return (r.d?'<span style="color:#888780">'+_dur(r.d)+' </span>':'')+'<span style="color:#0f6e56;font-weight:600">'+esc(r.a)+'</span>';}).join('<span style="color:#888780"> \u00b7 </span>');
+  var rh=rates.map(function(r){return (r.d?'<span style="color:#888780">'+_dur(r.d)+' </span>':'')+'<span style="color:#0f6e56;font-weight:600">'+esc(r.a)+'</span>';}).join('<span style="color:#888780"> · </span>');
+  var pinmk='<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:#888780;stroke-width:2;vertical-align:-1px"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
   var vch=c.val==='exp'?'<span style="font-family:var(--mo);font-size:10px;font-weight:700;color:var(--red2);background:var(--red-bg);border:1px solid var(--red-line);border-radius:6px;padding:2px 6px;flex:none;white-space:nowrap">\u00a3\u25b2</span>':c.val==='gv'?'<span style="font-family:var(--mo);font-size:10px;font-weight:700;color:var(--grn2);background:var(--grn-bg);border:1px solid var(--grn-line);border-radius:6px;padding:2px 6px;flex:none;white-space:nowrap">\u00a3\u25bc</span>':'';
   var gch=(c.dupIndex&&c.dupIndex>1)?'<span style="font-family:var(--mo);font-size:10px;font-weight:700;color:#5b3a8a;background:#efeaf6;border:1px solid #d6c9ea;border-radius:6px;padding:2px 6px;flex:none">G'+c.dupIndex+'</span>':'';
-  var pinmk='<svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:none;stroke:#888780;stroke-width:2;vertical-align:-1px"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
   var locTxt=c.dist?esc(c.dist):(c.region||c.location?esc(c.region||c.location):'');
   var openIc=c.url?' <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:#0f6e56;stroke-width:2;vertical-align:-1px"><path d="M7 17L17 7M9 7h8v8"/></svg>':'';
   var loc=locTxt?(pinmk+' '+locTxt+openIc):'';
   return '<div class="rowwrap">'
    +'<div class="swipeacts"><button class="arch" data-act="arch" data-id="'+c.id+'"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8"/></svg>Archive</button><button class="del" data-act="del" data-id="'+c.id+'"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M6 7l1 13h10l1-13"/></svg>Delete</button></div>'
-   +'<div class="row" data-id="'+c.id+'" style="padding:0;gap:0;align-items:stretch;overflow:hidden;flex-direction:column">'
-   +imgBlock
-   +'<div style="display:flex;align-items:stretch">'
+   +'<div class="row" data-id="'+c.id+'" style="padding:0;gap:0;align-items:stretch;overflow:hidden;min-height:104px">'
+   +'<div class="chk" style="align-self:center;margin-left:8px"><svg class="ic" viewBox="0 0 24 24" style="width:12px;height:12px;stroke-width:3"><path d="M5 12l5 5L20 6"/></svg></div>'
    +'<div style="width:5px;background:'+edge+';flex:none"></div>'
+   +'<div style="width:104px;flex:none;align-self:stretch;background:'+photo+';position:relative;border-radius:0">'+cnt+'</div>'
    +'<div style="flex:1;min-width:0;padding:9px 11px;display:flex;flex-direction:column;justify-content:center">'
-   +'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="rnum">'+fmtNum(c.number)+'</span>'+aoBadge(c)+gch+'</span>'+(lc?'<span style="font-family:var(--mo);font-size:11px;color:#5f5e5a;white-space:nowrap">'+lc+'</span>':'')+'</div>'
+   +'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="rnum">'+fmtNum(c.number)+'</span>'+aoBadge(c)+gch+'</span>'+pin+'</div>'
    +'<div style="display:flex;align-items:center;gap:5px;margin-top:6px">'
    +(st?'<span class="stpill '+st+'">'+statusLabel(st)+'</span>':'')
    +'<span style="font-family:var(--mo);font-size:11px;background:'+ct.bg+';color:'+ct.fg+';padding:2px 7px;border-radius:6px">'+ct.c+'</span>'
    +ic+'<span style="flex:1"></span>'
+   +(lc?'<span style="font-family:var(--mo);font-size:11px;color:#5f5e5a;white-space:nowrap">'+lc+'</span>':'')
    +'</div>'
    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px">'
    +'<span style="display:flex;align-items:center;gap:5px;min-width:0"><span style="font-family:var(--mo);font-size:12px;white-space:nowrap">'+rh+'</span>'+vch+'</span>'
    +'<span style="display:flex;align-items:center;gap:5px;flex:none">'+(c.city&&currentCity==='all'?('<span style="font-family:var(--mo);font-size:10px;font-weight:700;color:var(--amber2);background:var(--amber-bg2);border:1px solid var(--amber-line);border-radius:7px;padding:2px 7px;white-space:nowrap">'+esc(c.city)+'</span>'):'')+(c.area?('<span data-areachip="'+esc(c.area)+'" style="font-family:var(--mo);font-size:10px;font-weight:700;color:var(--amber);background:var(--panel2);border:1px solid var(--line2);border-radius:7px;padding:2px 7px;white-space:nowrap;flex:none;cursor:pointer">\u25ce '+esc(c.area)+'</span>'):(loc?'<span style="font-family:var(--mo);font-size:11px;color:#5f5e5a;white-space:nowrap;flex:none">'+loc+'</span>':''))+'</span>'
    +'</div>'
-   +'</div></div>'
-   +'</div></div>';
+   +'</div></div></div>';
 }
+
 function visibleContacts(){
   const q=($('searchInput').value||'').toLowerCase();
   return contacts.filter(c=>{
