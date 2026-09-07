@@ -61,7 +61,8 @@ function loadMapsApi(){
   });
   return _mapsLoad;
 }
-function geoQueryFor(c){ const bits=[c.address,c.location,c.region].map(x=>(x||'').trim()).filter(Boolean); if(!bits.length) return null; return bits[0]+', UK'; }
+function geoCountryFor(c){ const e=(''+(c&&c.e164||c&&c.number||'')).replace(/[^0-9+]/g,''); if(e.indexOf('+49')===0) return {code:'DE',suffix:', Germany'}; if(e.indexOf('+40')===0) return {code:'RO',suffix:', Romania'}; if(e.indexOf('+353')===0) return {code:'IE',suffix:', Ireland'}; return {code:'GB',suffix:', UK'}; }
+function geoQueryFor(c){ const bits=[c.address,c.location,c.region].map(x=>(x||'').trim()).filter(Boolean); if(!bits.length) return null; return bits[0]+geoCountryFor(c).suffix; }
 const LDN_COMPASS={E:'East London',EC:'Central London',N:'North London',NW:'North West London',SE:'South East London',SW:'South West London',W:'West London',WC:'Central London'};
 const COARSE_AREAS=new Set(['East London','North London','South London','West London','North West London','South East London','South West London','Central London','London','Greater London','']);
 function extractArea(res){
@@ -85,7 +86,7 @@ async function runGeocoding(){
     for(const c of todo){
       try{
         const isRedo=!!(c.geo&&c.geo.lat);
-        const r=await geocoder.geocode(isRedo?{ location:c.geo }:{ address: geoQueryFor(c), componentRestrictions:{ country:'GB' } });
+        const r=await geocoder.geocode(isRedo?{ location:c.geo }:{ address: geoQueryFor(c), componentRestrictions:{ country:geoCountryFor(c).code } });
         const g=(r.results||[]).find(x=>extractArea(x)&&!COARSE_AREAS.has(extractArea(x)))||(r.results&&r.results[0]);
         if(g){ const p=g.geometry.location; const area=extractArea(g)||c.area||c.region||''; const upd={ area }; if(!isRedo) upd.geo={lat:p.lat(),lng:p.lng()}; if(isRedo&&COARSE_AREAS.has(area)) c._geoFail=1; if(!isRedo||!COARSE_AREAS.has(area)) { await store.update(c.id,upd); done++; } }
         else c._geoFail=1;
@@ -288,7 +289,13 @@ const CITY_CENTERS=[
   ['Bristol',51.4545,-2.5879,15],['Newcastle',54.9783,-1.6178,15],['Nottingham',52.9548,-1.1581,15],
   ['Leicester',52.6369,-1.1398,13],['Glasgow',55.8642,-4.2518,18],['Edinburgh',55.9533,-3.1883,15],
   ['Cardiff',51.4816,-3.1791,13],['Bucharest',44.4268,26.1025,25],['Cluj-Napoca',46.7712,23.6236,15],
-  ['Timisoara',45.7489,21.2087,15],['Iasi',47.1585,27.6014,15],['Constanta',44.1598,28.6348,15],['Brasov',45.658,25.6012,15]
+  ['Timisoara',45.7489,21.2087,15],['Iasi',47.1585,27.6014,15],['Constanta',44.1598,28.6348,15],['Brasov',45.658,25.6012,15],
+  ['K\u00f6ln',50.9375,6.9603,18],['D\u00fcsseldorf',51.2277,6.7735,14],['Dortmund',51.5136,7.4653,13],['Essen',51.4556,7.0116,11],
+  ['Duisburg',51.4344,6.7623,11],['Bochum',51.4818,7.2162,9],['Wuppertal',51.2562,7.1508,10],['Bielefeld',52.0302,8.5325,14],
+  ['Bonn',50.7374,7.0982,12],['M\u00fcnster',51.9607,7.6261,14],['Osnabr\u00fcck',52.2799,8.0472,14],['Aachen',50.7753,6.0839,13],
+  ['M\u00f6nchengladbach',51.1805,6.4428,10],['Gelsenkirchen',51.5177,7.0857,8],['Krefeld',51.3388,6.5853,9],['Oberhausen',51.4963,6.8638,7],
+  ['Hagen',51.3671,7.4633,10],['Paderborn',51.7189,8.7575,14],['Siegen',50.8748,8.0243,14],['Gummersbach',51.0277,7.5644,12],
+  ['Frankfurt',50.1109,8.6821,20],['Hannover',52.3759,9.7320,18],['Berlin',52.5200,13.4050,30],['Hamburg',53.5511,9.9937,25],['M\u00fcnchen',48.1351,11.5820,22]
 ];
 function _havKm(a,b,c,d){ const R=6371,t=Math.PI/180,dl=(c-a)*t,dg=(d-b)*t,h=Math.sin(dl/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin(dg/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
 function cityFor(geo){ if(!geo||typeof geo.lat!=='number') return null; let best=null,bd=1e9; for(const [n,la,lo,r] of CITY_CENTERS){ const d=_havKm(geo.lat,geo.lng,la,lo); if(d<=r&&d<bd){ bd=d; best=n; } } return best; }
@@ -555,13 +562,14 @@ function nukeFlash(){ const ph=$('app'); const f=document.createElement('div'); 
 function nukeOne(id,el,done){ const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(el,()=>{ store.remove(id); done&&done(); }); }
 function fmtNum(n){ if(!n) return ''; const d=(''+n).replace(/\D/g,''); if(d.length===11&&d.startsWith('0')) return d.replace(/(\d{5})(\d{3})(\d{3})/,'$1 $2 $3'); return n; }
 function isStandalone(){ try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
-function launchWa(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d='44'+d.slice(1); const enc=encodeURIComponent(text||''); if(isStandalone()){ location.href='whatsapp://send?phone='+d+'&text='+enc; } else { window.open('https://wa.me/'+d+'?text='+enc,'_blank'); } }
+function waDigits(n){ if(n&&typeof n==='object'){ const e=(''+(n.e164||'')).replace(/\D/g,''); if(e.length>=9) return e; n=n.number; } let d=(''+n).replace(/\D/g,''); if(d.startsWith('00')) d=d.slice(2); else if(d.startsWith('0')) d='44'+d.slice(1); return d; }
+function launchWa(n,text){ const d=waDigits(n); const enc=encodeURIComponent(text||''); if(isStandalone()){ location.href='whatsapp://send?phone='+d+'&text='+enc; } else { window.open('https://wa.me/'+d+'?text='+enc,'_blank'); } }
 function launchUrl(u){ try{ const w=window.open(u,'_blank'); if(!w){ location.href=u; } }catch(e){ location.href=u; } }
-function waLink(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d='44'+d.slice(1); return `https://wa.me/${d}?text=${encodeURIComponent(text)}`; }
+function waLink(n,text){ const d=waDigits(n); return `https://wa.me/${d}?text=${encodeURIComponent(text)}`; }
 /* ---------------- Fix 11: channel routing ---------------- */
 function channelFor(c){ if(c && c.channel) return c.channel; if(sessionForceWa) return 'wa'; return _ctry(c&&c.number).c==='UK' ? routeUK : routeOther; }
-function channelUrl(c,ch){ const num=(''+c.number).replace(/[^\d+]/g,''); return ch==='sms' ? ('sms:'+num+'?&body='+encodeURIComponent(template())) : waLink(c.number,template()); }
-function openChannelInApp(c){ const ch=channelFor(c); if(ch==='wa'){ launchWa(c.number,template()); } else { location.href=channelUrl(c,ch); } return ch; }
+function channelUrl(c,ch){ const num=(''+(c.e164||c.number)).replace(/[^\d+]/g,''); return ch==='sms' ? ('sms:'+num+'?&body='+encodeURIComponent(template())) : waLink(c,template()); }
+function openChannelInApp(c){ const ch=channelFor(c); if(ch==='wa'){ launchWa(c,template()); } else { location.href=channelUrl(c,ch); } return ch; }
 /* ---------------- Fix 10: capture from share target ---------------- */
 function captureFromParams(p){
   const imgs=(p.get('imgs')||'').split('|').map(s=>s.trim()).filter(Boolean);
@@ -682,8 +690,8 @@ function wire(){
   $('dnotes').addEventListener('blur',()=>{ if(currentId) store.update(currentId,{notes:$('dnotes').textContent.trim()}); });
   $('delBtn').addEventListener('click',()=>{ const id=currentId; const body=$('s-detail').querySelector('.body'); const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(body,()=>{ body.classList.remove('dissolving'); store.remove(id); back(); }); toast('Nuked, number remembered'); });
   $('actCopy').addEventListener('click',()=>{ const c=store.get(currentId); navigator.clipboard?.writeText(c.number); toast('Copied '+fmtNum(c.number)); });
-  $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('WhatsApp',(i)=>{ activeTplIdx=i; store.update(currentId,{lastWa:Date.now()}); refreshContacted(); launchWa(c.number,templateText(i)); }); });
-  $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('SMS',(i)=>{ activeTplIdx=i; store.update(currentId,{lastSms:Date.now()}); refreshContacted(); { const num=(''+c.number).replace(/[^\d+]/g,''); launchUrl('sms:'+num+'?&body='+encodeURIComponent(templateText(i))); } }); });
+  $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('WhatsApp',(i)=>{ activeTplIdx=i; store.update(currentId,{lastWa:Date.now()}); refreshContacted(); launchWa(c,templateText(i)); }); });
+  $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); tplPicker('SMS',(i)=>{ activeTplIdx=i; store.update(currentId,{lastSms:Date.now()}); refreshContacted(); { const num=(''+(c.e164||c.number)).replace(/[^\d+]/g,''); launchUrl('sms:'+num+'?&body='+encodeURIComponent(templateText(i))); } }); });
   $('actMap').addEventListener('click',()=>{ const c=store.get(currentId); const q=(c.address||c.location||c.region||'').trim(); if(!q){ toast('No location set'); return; } launchUrl('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)); });
   $('dsource').addEventListener('click',()=>{ const c=store.get(currentId); if(c&&c.url) window.open(c.url,'_blank','noopener'); });
   // photo

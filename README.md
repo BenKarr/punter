@@ -1,4 +1,12 @@
-# punter PWA (build p.15)
+# punter PWA (build p.20)
+
+## p.20: country-aware geocoding, German cities, WhatsApp/SMS on e164
+
+- Geocode query suffix and Google component restriction now follow the contact's dial code (+49 Germany, +40 Romania, +353 Ireland, else UK). Previously every address was sent as "..., UK" restricted to GB, so German contacts could never resolve.
+- City centres extended with NRW and neighbours (Köln, Düsseldorf, Dortmund, Essen, Duisburg, Bochum, Wuppertal, Bielefeld, Bonn, Münster, Osnabrück, Aachen, Mönchengladbach, Gelsenkirchen, Krefeld, Oberhausen, Hagen, Paderborn, Siegen, Gummersbach) plus Frankfurt, Hannover, Berlin, Hamburg, München. Existing contacts with geo but no city get picked up by the normal backfill pass on first load.
+- WhatsApp and SMS launch from `e164` when the contact has one. The old path stripped the display number and forced 44 on anything starting with 0, which would have sent a German 0159 number to a UK 44159 number.
+- Address field (`address`) now arrives from ng.07 for ladies.de contacts and is the first geocode input, so the pin lands on the building.
+- No visual changes. New ng.07 fields (visit, sms, callerId, kind) are stored but not shown; row chips wait for a mock.
 
 Open `index.html` and it runs in demo mode immediately (data saved on this device).
 Add your Firebase config in `firebase-config.js` and deploy to switch on real cloud sync.
