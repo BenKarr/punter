@@ -80,7 +80,7 @@
   <section class="screen tabscreen" id="t-contacts">
     <div class="hd">
       <div class="hd-top">
-        <div class="brand"><span class="gb low">punter</span> <span class="build" id="pbuild">p.20</span></div>
+        <div class="brand"><span class="gb low">punter</span> <span class="build" id="pbuild">p.26</span></div>
         <div class="iconbtn" id="selBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
       </div>
       <div class="search" style="position:relative"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="searchInput" placeholder="Search number, name, area..." style="padding-right:34px"><div id="searchClear" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mut4);color:#fff;font-family:var(--mo);font-size:13px;line-height:22px;text-align:center;cursor:pointer">×</div></div>
@@ -100,10 +100,13 @@
         <div class="fpill" data-f="creamed">Creamed</div>
         <div class="fpill" data-f="exp"><span style="color:var(--red2);font-weight:700">£▲</span>Expensive</div>
         <div class="fpill" data-f="gv"><span style="color:var(--grn2);font-weight:700">£▼</span>Value</div>
+        <div class="fpill" data-f="nat">NAT</div>
+        <div class="fpill" data-f="expired">Expired</div>
       </div>
       <div class="locstrip" id="listLocs" style="display:none"></div>
       <div class="cbar" id="cbar" style="display:none"></div>
       <div class="cbar" id="citybar" style="display:none"></div>
+      <div class="cbar" id="abar" style="display:none"></div>
     </div>
     <div class="body"><div class="list" id="rows"></div></div>
     <div class="bulkbar" id="bulkbar">
@@ -140,6 +143,7 @@
       </div></div>
       <div class="sgrp"><div class="seclbl">Security</div><div class="scard">
         <div class="srow"><div class="rico" style="background:var(--amber-bg);color:var(--amber)"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3H5a2 2 0 0 0-2 2v2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M9 9v1.5M15 9v1.5M12 9v3l-1.2 1M8.8 15a3.6 3.6 0 0 0 6.4 0"/></svg></div><div class="ti"><div class="t">Face ID lock</div><div class="s">unlock punter with Face ID</div></div><div class="sw" id="faceSw"><i></i></div></div>
+        <div class="srow" id="paceRow"><div class="ti"><div class="t">Burst pacing</div><div class="s">cap per hour and minimum gap, the Send button waits</div></div><div class="v" id="paceVal">20/h · 90s ›</div></div>
         <div class="srow" id="lockdurrow"><div class="ti"><div class="t">Require unlock</div><div class="s">after the app is closed</div></div><div class="v" id="lockdurval">After 5 minutes ›</div></div>
       </div></div>
       <div class="sgrp"><div class="seclbl">Outreach routing</div><div class="scard">
@@ -190,7 +194,7 @@
           <button class="tagbtn pinbtn" data-tag="pinned"><svg class="ic" viewBox="0 0 24 24"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><path d="M12 15v6"/></svg>Pinned</button>
         </div></div>
         <div class="sec" id="listingSec"><div class="seclbl">Listing</div><div class="ttl" id="dtitle"></div><div class="desc" id="ddesc"></div></div>
-        <div class="sec" id="ratesSec"><div class="seclbl">Rates</div><div class="card" id="drates"></div></div>
+        <div class="sec" id="ratesSec"><div class="seclbl" style="justify-content:space-between">Rates <span id="rateSheetBtn" style="font-family:var(--hd);font-size:11px;font-weight:600;color:var(--amber);border:1px solid var(--amber-line);border-radius:7px;padding:3px 9px;cursor:pointer;letter-spacing:0;text-transform:none">Number and rates</span></div><div class="card" id="drates"></div></div>
         <div class="sec" id="allDetails" style="display:none"><div class="seclbl">All details</div><div class="card adbody"></div></div>
         <div class="sec"><div class="seclbl">Notes</div><div class="notebox" id="dnotes" contenteditable="true" data-ph="Tap to add a note"></div></div>
         <div class="sec" id="sourceSec"><div class="seclbl">Source</div><div class="openlink" id="dsource"><span id="dsourceurl"></span><svg class="ic" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></div></div>
@@ -307,5 +311,13 @@
   <div class="toast" id="toast"></div>
 </div>
 <script type="module" src="app.js"></script>
+
+  <div class="sheet-bg" id="pacesheetbg"><div class="sheet" id="pacesheet">
+    <div class="grab"></div><h3>Burst pacing</h3>
+    <div class="fgroup"><div class="lbl">Max per hour</div><div class="fchips" id="capChips"><span class="fchip" data-v="10">10</span><span class="fchip" data-v="15">15</span><span class="fchip on" data-v="20">20</span><span class="fchip" data-v="30">30</span><span class="fchip" data-v="40">40</span></div></div>
+    <div class="fgroup"><div class="lbl">Minimum gap</div><div class="fchips" id="gapChips"><span class="fchip" data-v="45">45s</span><span class="fchip on" data-v="90">90s</span><span class="fchip" data-v="150">2.5 min</span><span class="fchip" data-v="300">5 min</span></div></div>
+    <button class="pbtn pri" style="width:100%" id="paceDone">Done</button>
+  </div></div>
+  </div></div>
 </body>
 </html>

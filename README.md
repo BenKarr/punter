@@ -1,12 +1,4 @@
-# punter PWA (build p.20)
-
-## p.20: country-aware geocoding, German cities, WhatsApp/SMS on e164
-
-- Geocode query suffix and Google component restriction now follow the contact's dial code (+49 Germany, +40 Romania, +353 Ireland, else UK). Previously every address was sent as "..., UK" restricted to GB, so German contacts could never resolve.
-- City centres extended with NRW and neighbours (Köln, Düsseldorf, Dortmund, Essen, Duisburg, Bochum, Wuppertal, Bielefeld, Bonn, Münster, Osnabrück, Aachen, Mönchengladbach, Gelsenkirchen, Krefeld, Oberhausen, Hagen, Paderborn, Siegen, Gummersbach) plus Frankfurt, Hannover, Berlin, Hamburg, München. Existing contacts with geo but no city get picked up by the normal backfill pass on first load.
-- WhatsApp and SMS launch from `e164` when the contact has one. The old path stripped the display number and forced 44 on anything starting with 0, which would have sent a German 0159 number to a UK 44159 number.
-- Address field (`address`) now arrives from ng.07 for ladies.de contacts and is the first geocode input, so the pin lands on the building.
-- No visual changes. New ng.07 fields (visit, sms, callerId, kind) are stored but not shown; row chips wait for a mock.
+# punter PWA (build p.15)
 
 Open `index.html` and it runs in demo mode immediately (data saved on this device).
 Add your Firebase config in `firebase-config.js` and deploy to switch on real cloud sync.
@@ -42,3 +34,37 @@ Open index.html in a browser, tap "Continue in demo mode". Add, edit, status, ta
 
 ## p.19
 - Contact list back to the compact row layout (density fix, ~4-5 rows per screen). Thumb upgraded: 104px, uncropped via contain on dark backing, photo count badge kept. Full uncropped photos live in the detail carousel and outreach card. Nav stack and outreach changes from p.18 unchanged.
+
+
+## p.20
+- Portugal support: PT country chip and flag (+351), seven PT city centers (Lisboa r30, Porto r20 covering Gaia/Maia/Matosinhos, Braga, Coimbra, Faro, Setubal, Aveiro) in the city table for scope, planner and map.
+
+
+## p.21
+- NAT service flag from PT sites: NAT chip on rows (matched phrase in the tooltip and in all-details), NAT filter pill.
+- Ad lifecycle dates from rua69: published/updated/expires in all-details, row chip 'exp Nd' when under 3 days and 'expired' when past, Expired filter pill for culling dead ads.
+
+## p.26
+- Templates carry a scope (country code, site name or blank = default). Burst and the WA button pick the template automatically: site match, then country, then starred default; picking one in the burst screen overrides for that batch. Scope chip shown in Settings > Templates; editor has a Scope select.
+- Seeds: default, PT ("Olá, vi o teu anúncio. Estás disponível agora?"), UK incall line, Thaifriendly first message.
+- Synced with NG through `users/<uid>/meta/templates` {items, updatedAt}, newest wins, `punter_templates_ts` local stamp.
+- Contacts with `tfMsgAt` (Thaifriendly first message pasted from NG) count as messaged in the burst "not messaged" filter.
+
+## p.25
+- Burst pacing guard: Settings > Burst pacing sets max per hour (default 20) and minimum gap (default 90s). The Send & next button becomes a countdown when you are ahead of the pace and shows sent-this-hour / cap. Send timestamps in `punter_sent_ts`, settings in `punter_pace`.
+
+## p.24
+- Age chip (bold mono, dark pill) after the name on the row and in the detail header, all sites. No age: nothing on the row, detail shows a dashed "Set age" chip.
+- Tap the chip in detail to set or change age (18 to 99, blank clears). Saved via `store.update` so it syncs to NG through the existing `age` merge field.
+- Age band bar under the city bar: Any, 18-21, 22-25, 26-30, 31-40, 40+, ?. Independent of status filter, persisted as `punter_age`. Counts per band for the current category.
+
+## p.23
+- TH country chip teal (`#e0f2f1` / `#0f6e64`), was identical to PT.
+
+## p.22
+- Username identity: contacts from thaifriendly arrive with `handle` (tf:<username>) and no number. Row title shows the username with a TF chip, "Add number" chip opens the Number and rates sheet, WA/SMS on a no-number contact open the sheet instead.
+- Number and rates sheet (overlay): number box (+66 added on Thai contacts), three slots (ST/LT/ON on thaifriendly, 15min/30min/1hr elsewhere), per-slot extras from preset chips (users/<uid>/meta/extras, shared with Number Grabber) or free type, computed totals. Stored as `slots`; NG pulls it back.
+- Number collision rule: a typed number that matches another contact merges this one into it (username kept as alias, slots, profile fields, images carried over), the source doc is flagged `mergedInto` and hidden; NG drops it on the next sync.
+- TH routing (+66), Thai flag, city centres Bangkok, Pattaya, Phuket, Chiang Mai, Hua Hin.
+- Details show username, site, age, gender, country, city, joined, height, weight, last active, and rates as slot totals with extras breakdown.
+- Edit form: number field now also writes e164.

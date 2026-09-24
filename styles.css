@@ -70,6 +70,9 @@
   .rmain{flex:1;min-width:0}
   .rtop{display:flex;align-items:center;gap:6px}
   .rnum{font-family:var(--mo);font-weight:600;font-size:14px;letter-spacing:.2px}
+  .agechip{font-family:var(--mo);font-weight:700;font-size:13px;line-height:1;color:#fff;background:#2b2a26;border-radius:6px;padding:3px 7px;flex:none;white-space:nowrap}
+  .dnum .agechip{font-size:17px;padding:4px 9px}
+  .agechip.set{color:var(--mut2);background:transparent;border:1px dashed var(--line2);font-weight:600;font-size:11px;padding:2px 6px}
   .flag{font-size:13px}
   .stpill{font-family:var(--hd);font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.4px}
   .stpill.yes{background:var(--grn-bg);color:var(--grn);border:1px solid var(--grn-line)}
@@ -366,6 +369,34 @@
 #ovl .trow .nm{font-family:var(--hd);font-weight:700;font-size:13px;color:var(--txt)}
 #ovl .trow .tx{font-size:12px;color:var(--mut2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ovl .sendbtns{display:flex;gap:8px;margin-top:6px}
+  /* number and rates sheet (p.22) */
+  #ovl .rs-who{font-family:var(--mo);font-size:11px;color:var(--mut2);margin:-6px 0 12px}
+  #ovl .rs-fld{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  #ovl .rs-fld label{font-size:10.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--mut3);display:flex;justify-content:space-between}
+  #ovl .rs-fld label .cur{letter-spacing:0;text-transform:none;font-weight:500}
+  #ovl .rs-in{width:100%;border:1px solid var(--line2);border-radius:8px;padding:11px 12px;font-family:var(--mo);font-size:15px;color:var(--txt);background:var(--panel2)}
+  #ovl .rs-slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:6px}
+  #ovl .rs-slot{border:1px solid var(--line2);border-radius:10px;padding:9px 9px 8px;background:var(--panel2);display:flex;flex-direction:column;gap:6px;min-width:0}
+  #ovl .rs-slot.on{border-color:var(--amber-line);background:var(--amber-bg2)}
+  #ovl .rs-slot .k{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--mut2);display:flex;justify-content:space-between}
+  #ovl .rs-slot .k .cur{letter-spacing:0;text-transform:none;font-weight:500;color:var(--mut3)}
+  #ovl .rs-slot .base{font-family:var(--mo);font-size:17px;font-weight:600;color:var(--txt);border:none;border-bottom:1px solid var(--line2);background:none;width:100%;padding:2px 0 4px;border-radius:0}
+  #ovl .rs-xl{display:flex;flex-direction:column;gap:3px;min-height:18px}
+  #ovl .rs-xi{display:flex;justify-content:space-between;font-family:var(--mo);font-size:10.5px;color:var(--blu);gap:4px}
+  #ovl .rs-xi .rm{color:var(--mut3);padding:0 2px}
+  #ovl .rs-tot{display:flex;justify-content:space-between;font-family:var(--mo);font-size:11px;color:var(--mut2);border-top:1px dashed var(--line2);padding-top:5px}
+  #ovl .rs-tot b{color:var(--amber);font-size:13px}
+  #ovl .rs-prelbl{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--mut3);margin:8px 0 6px;display:flex;justify-content:space-between}
+  #ovl .rs-prelbl span{letter-spacing:0;text-transform:none;font-weight:500}
+  #ovl .rs-pres{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  #ovl .rs-pre{font-family:var(--mo);font-size:11px;color:var(--blu);background:#eef5fb;border:1px solid #bcd4e6;border-radius:14px;padding:5px 10px;display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+  #ovl .rs-pre .a{color:var(--mut2)}
+  #ovl .rs-free{display:flex;gap:6px;margin-bottom:12px}
+  #ovl .rs-free .rs-in{font-size:13px;padding:9px 10px}
+  #ovl .rs-free button{font-family:var(--hd);font-weight:600;font-size:12px;padding:0 12px;border-radius:8px;border:1px solid var(--amber-line);background:var(--amber-bg);color:var(--amber)}
+  .chip.add{display:inline-flex;align-items:center;gap:4px;color:var(--amber);border-color:var(--amber-line);background:var(--amber-bg);font-family:var(--hd);font-weight:600;font-size:10.5px;padding:3px 8px;cursor:pointer}
+  .chip.add svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  .chip.h{color:var(--blu);border-color:#bcd4e6;background:#eef5fb}
 #ovl .sendbtns .bwa{flex:1;font-family:var(--hd);font-weight:700;font-size:13px;padding:13px;border-radius:11px;border:none;cursor:pointer;background:var(--amber);color:#fff}
 #ovl .edrow{display:flex;flex-direction:column;gap:11px}
 #ovl .edrow label{font-family:var(--mo);font-size:10px;color:var(--mut2);text-transform:uppercase;letter-spacing:.4px}
