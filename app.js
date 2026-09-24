@@ -207,6 +207,7 @@ function tagEmoji(t){ return t==='flame'?'🔥':t==='cold'?'❄️':t==='creamed
 function _edge(s){return s==='yes'?'#1d9e75':s==='maybe'?'#ef9f27':s==='no'?'#e24b4a':'#c9c7bf';}
 function _ctry(n){var d=(''+n).replace(/[^0-9+]/g,'');
   if(d.indexOf('+40')===0)return{c:'RO',bg:'#e3edf7',fg:'#2c5a8a'};
+  if(/^0[689]\d{8}$/.test(d))return{c:'TH',bg:'#e0f2f1',fg:'#0f6e64'};
   if(d.indexOf('+44')===0||/^0\d{9,10}$/.test(d))return{c:'UK',bg:'#fbe7ee',fg:'#9a2c52'};
   if(d.indexOf('+351')===0)return{c:'PT',bg:'#fdeae6',fg:'#a04432'};
   if(d.indexOf('+34')===0)return{c:'ES',bg:'#fdeede',fg:'#9a5b12'};
@@ -232,7 +233,7 @@ function renderAgeBar(){
 function promptAge(id){ var c=contacts.find(function(x){ return x.id===id; }); var cur=ageNum(c); var v=prompt('Age', cur!=null?String(cur):''); if(v===null) return; v=v.trim(); if(v===''){ store.update(id,{age:null}); return; } var a=parseInt(v,10); if(!(a>=18&&a<=99)){ toast('Age must be 18 to 99'); return; } store.update(id,{age:a}); }
 function _ctryC(c){ if(c&&!c.number&&(c.site==='thaifriendly'||c.country==='Thailand')) return {c:'TH',bg:'#e0f2f1',fg:'#0f6e64'}; return _ctry(c&&c.number); }
 function flagCode(c){ return ({UK:'🇬🇧',RO:'🇷🇴',ES:'🇪🇸',IT:'🇮🇹',DE:'🇩🇪',FR:'🇫🇷',PT:'🇵🇹',TH:'🇹🇭'})[c]||'🏳️'; }
-/* ---- p.22: handle identity, slots with extras. p.23: TH chip teal. p.24: age chip, age bands, manual age. p.25: burst pacing guard. p.26: scoped templates synced with NG. p.27: cloud backup status row. p.28: On hold. p.29: hold. p.30: one-handed detail. p.31: TH and PT numbers display nationally. p.32: IN country. p.33: Thai number normalisation by contact, repair pass ---- */
+/* ---- p.22: handle identity, slots with extras. p.23: TH chip teal. p.24: age chip, age bands, manual age. p.25: burst pacing guard. p.26: scoped templates synced with NG. p.27: cloud backup status row. p.28: On hold. p.29: hold. p.30: one-handed detail. p.31: TH and PT numbers display nationally. p.32: IN country. p.33: Thai normalisation. p.34: number shape decides country, no blind +44; big Number and rates button ---- */
 function handleName(c){ return String((c&&c.handle)||'').replace(/^[a-z]+:/,''); }
 function dispName(c){ return c.number ? fmtNum(c.number) : (handleName(c)||c.name||'?'); }
 function slotTotal(sl){ var b=parseFloat(sl&&sl.base)||0; return b+((sl&&sl.extras)||[]).reduce(function(a,x){ return a+(parseFloat(x.amount)||0); },0); }
@@ -240,8 +241,10 @@ function curSymP(c,cur){ var m={GBP:'\u00a3',EUR:'\u20ac',USD:'$',THB:'\u0e3f',R
 function slotDefsP(c){ return (c&&(c.site==='thaifriendly'||c.country==='Thailand')) ? [['ST','short time'],['LT','long time'],['ON','overnight']] : [['15min','15 min'],['30min','30 min'],['1hr','1 hour']]; }
 function slotsOf(c){ if(c.slots&&c.slots.length) return c.slots; var out=[]; (c.rates||[]).forEach(function(r){ var d=String(r.d||'').toLowerCase(); var k=/15/.test(d)?'15min':/30/.test(d)?'30min':/(^|[^0-9])(60|1)\s*(h|m)/.test(d)?'1hr':null; var a=String(r.a||'').replace(/[^0-9.]/g,''); if(k&&a&&!out.some(function(o){return o.k===k;})) out.push({k:k,base:a,cur:null,extras:[]}); }); return out; }
 /* p.33: a Thai contact's number is Thai. th comes from isThaiC(c) (site, handle, country or existing +66), never from a missing number. "+0..." is treated as national. */
+/* p.34: shape of a bare national number decides the country when nothing else does: 10 digits 06/08/09 = Thai mobile, 11 digits 07 = UK mobile, 9 digits 9x = PT. Never a blind +44. */
+function intlOfNational(d){ if(/^0[689]\d{8}$/.test(d)) return '66'+d.slice(1); if(/^07\d{9}$/.test(d)) return '44'+d.slice(1); if(/^0[12]\d{8,9}$/.test(d)) return '44'+d.slice(1); if(/^9\d{8}$/.test(d)) return '351'+d; return null; }
 function isThaiC(c){ if(!c) return false; return c.site==='thaifriendly'||/^tf:/.test(String(c.handle||''))||c.country==='Thailand'||c.country==='TH'||String(c.number||'').indexOf('+66')===0; }
-function toE164P(raw,th){ var compact=String(raw||'').replace(/[^\d+]/g,''); if(compact.indexOf('+0')===0) compact=compact.slice(1); var d=compact.replace(/\D/g,''); if(!d) return null; var e; if(compact.charAt(0)==='+') e='+'+d; else if(d.indexOf('00')===0) e='+'+d.slice(2); else if(th&&d.length===10&&d.charAt(0)==='0') e='+66'+d.slice(1); else if(th&&d.length===9&&/^[689]/.test(d)) e='+66'+d; else if(th&&d.length===11&&d.indexOf('07')===0) e='+44'+d.slice(1); else if(th) return null; else if(d.indexOf('44')===0&&d.length>=12) e='+'+d; else if(d.charAt(0)==='0'){ if(d.length<10||d.length>11) return null; e='+44'+d.slice(1); } else { if(d.length<10||d.length>13) return null; e='+'+d; } var i=e.slice(1); if(i.length<9||i.length>15) return null; return e; }
+function toE164P(raw,th){ var compact=String(raw||'').replace(/[^\d+]/g,''); if(compact.indexOf('+0')===0) compact=compact.slice(1); var d=compact.replace(/\D/g,''); if(!d) return null; var e; if(compact.charAt(0)==='+') e='+'+d; else if(d.indexOf('00')===0) e='+'+d.slice(2); else if(th&&d.length===10&&d.charAt(0)==='0') e='+66'+d.slice(1); else if(th&&d.length===9&&/^[689]/.test(d)) e='+66'+d; else if(th&&d.length===11&&d.indexOf('07')===0) e='+44'+d.slice(1); else if(th) return null; else if(d.indexOf('44')===0&&d.length>=12) e='+'+d; else if(d.charAt(0)==='0'){ var g=intlOfNational(d); if(!g) return null; e='+'+g; } else if(/^9\d{8}$/.test(d)){ e='+351'+d; } else { if(d.length<10||d.length>13) return null; e='+'+d; } var i=e.slice(1); if(i.length<9||i.length>15) return null; return e; }
 var extrasPresets=[], _extrasUnsub=null;
 function watchExtras(uid){ try{ var fb=window.__fb; if(!fb) return; var ref=fb.fs.doc(fb.db,'users',uid,'meta','extras'); if(_extrasUnsub) _extrasUnsub(); _extrasUnsub=fb.fs.onSnapshot(ref,function(snap){ var d=snap.exists()?snap.data():null; extrasPresets=(d&&Array.isArray(d.items))?d.items:[]; }); }catch(e){} }
 async function savePreset(label,amount){ try{ var fb=window.__fb; if(!fb||!user) return; var items=extrasPresets.slice(); var i=items.findIndex(function(p){ return String(p.label).toLowerCase()===label.toLowerCase(); }); if(i>=0) items[i].amount=amount; else items.push({label:label,amount:amount}); await fb.fs.setDoc(fb.fs.doc(fb.db,'users',user.uid,'meta','extras'),{items:items,updatedAt:Date.now()}); }catch(e){} }
@@ -725,9 +728,9 @@ function nukeFlash(){ const ph=$('app'); const f=document.createElement('div'); 
 function nukeOne(id,el,done){ const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(el,()=>{ store.remove(id); done&&done(); }); }
 function fmtNum(n){ if(!n) return ''; const d=(''+n).replace(/\D/g,''); if(d.length===11&&d.startsWith('0')) return d.replace(/(\d{5})(\d{3})(\d{3})/,'$1 $2 $3'); if(d.length===11&&d.startsWith('66')) return ('0'+d.slice(2)).replace(/(\d{3})(\d{3})(\d{4})/,'$1 $2 $3'); if(d.length===12&&d.startsWith('351')) return d.slice(3).replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3'); return n; }
 function isStandalone(){ try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
-function launchWa(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d='44'+d.slice(1); const enc=encodeURIComponent(text||''); if(isStandalone()){ location.href='whatsapp://send?phone='+d+'&text='+enc; } else { window.open('https://wa.me/'+d+'?text='+enc,'_blank'); } }
+function launchWa(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d=intlOfNational(d)||('44'+d.slice(1)); const enc=encodeURIComponent(text||''); if(isStandalone()){ location.href='whatsapp://send?phone='+d+'&text='+enc; } else { window.open('https://wa.me/'+d+'?text='+enc,'_blank'); } }
 function launchUrl(u){ try{ const w=window.open(u,'_blank'); if(!w){ location.href=u; } }catch(e){ location.href=u; } }
-function waLink(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d='44'+d.slice(1); return `https://wa.me/${d}?text=${encodeURIComponent(text)}`; }
+function waLink(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d=intlOfNational(d)||('44'+d.slice(1)); return `https://wa.me/${d}?text=${encodeURIComponent(text)}`; }
 /* ---------------- Fix 11: channel routing ---------------- */
 function channelFor(c){ if(c && c.channel) return c.channel; if(sessionForceWa) return 'wa'; return _ctry(c&&c.number).c==='UK' ? routeUK : routeOther; }
 function channelUrl(c,ch){ const num=(''+c.number).replace(/[^\d+]/g,''); return ch==='sms' ? ('sms:'+num+'?&body='+encodeURIComponent(template())) : waLink(c.number,template()); }
@@ -869,8 +872,9 @@ function wire(){
   $('am-link').addEventListener('click',()=>addMode('link')); $('am-man').addEventListener('click',()=>addMode('manual'));
   $('addSave').addEventListener('click',()=>{
     const link=$('am-link').classList.contains('on');
-    const number=(link?$('a-number2'):$('a-number')).value.trim();
-    if(!number){ toast('Add a phone number'); return; }
+    const rawNum=(link?$('a-number2'):$('a-number')).value.trim();
+    if(!rawNum){ toast('Add a phone number'); return; }
+    const number=toE164P(rawNum,false); if(!number){ toast('Number not readable: use +CC..., 07... (UK), 06/08/09... (TH) or 9... (PT)'); return; }
     const c={ number, name:(link?$('a-name2'):$('a-name')).value.trim(), url:link?$('a-url').value.trim():'', location:link?'':$('a-loc').value.trim(), price:link?'':$('a-price').value.trim(), status:null, tags:[], images:[], grabs:1, cat:'active' };
     store.add(c); ['a-number2','a-name2','a-url','a-number','a-name','a-loc','a-price'].forEach(i=>{ if($(i)) $(i).value=''; });
     back(); toast('Contact added'); showTab('t-contacts');

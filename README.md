@@ -44,6 +44,11 @@ Open index.html in a browser, tap "Continue in demo mode". Add, edit, status, ta
 - NAT service flag from PT sites: NAT chip on rows (matched phrase in the tooltip and in all-details), NAT filter pill.
 - Ad lifecycle dates from rua69: published/updated/expires in all-details, row chip 'exp Nd' when under 3 days and 'expired' when past, Expired filter pill for culling dead ads.
 
+## p.34
+- Send time: `launchWa` / `waLink` prefixed 44 to any 0-leading stored number, so a Thai contact stored nationally sent to +44. Now `intlOfNational`: 10 digits 06/08/09 → 66, 11 digits 07 → 44, 9 digits 9x → 351.
+- Same inference in `toE164P` when there is no contact context (Add contact screen now normalises before saving; refuses unreadable input with a hint), and in `_ctry` (10-digit 0[689] shows TH not UK).
+- "Number and rates" is a 44px amber button in the Rates section (was 11px text).
+
 ## p.33
 - Bug: adding a number to a Thai contact that had no number yet went through the UK default (0646650815 → +44646650815) because "is Thai" was derived from the existing number. Now `isThaiC(c)` (site, tf: handle, country, or existing +66) drives `toE164P`; a Thai contact never gets a +44 guess, and "+0..." input is treated as national. One-off `repairThaiNumbers()` after sign-in fixes contacts already mangled (+44 6/8/9... on a Thai contact, or +0...).
 
