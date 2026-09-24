@@ -44,6 +44,21 @@ Open index.html in a browser, tap "Continue in demo mode". Add, edit, status, ta
 - NAT service flag from PT sites: NAT chip on rows (matched phrase in the tooltip and in all-details), NAT filter pill.
 - Ad lifecycle dates from rua69: published/updated/expires in all-details, row chip 'exp Nd' when under 3 days and 'expired' when past, Expired filter pill for culling dead ads.
 
+## p.30
+- Contact detail: full-width dark Back bar at the top ("Back to Active / On hold / Home / Burst", position "3 / 8", edit icon on the right); floating circles removed.
+- Carousel: swipe left/right; tap left third = previous, right third = next, middle = open viewer on the visible photo; arrows 44px; hidden slides `pointer-events:none` (this was the "tap opens the last photo" bug); thumbnail strip taps move the carousel.
+- Photo viewer: 48px X top left, swipe down closes, swipe left/right steps, arrows 44px, count next to the X.
+- Navigation: `go()` pushes a history state, phone back gesture pops (sheets close first), swipe right from the left edge (start x ≤ 24px, move > 80px) does the same.
+
+## p.29
+- Hold decisions locked: held contacts stay visible in Done and Archived (marker), hidden from Active and AO. Hold sheet with reason pick-list (Went quiet, Not now, Too far, Price, Wait for reply, Other) → `holdReason`. Release sheet picks the category (previous one marked "was here"). Hold list sort bar: Newest, Oldest, Status, Reason (`punter_holdsort`). Swipe-left gets a third Hold action (rows swipe to 210px when present). Detail: full-width amber Hold button under the notes/rates area, shows reason and age of hold, tap to release.
+
+## p.28
+- On hold: `hold: true` + `holdAt` on a contact, independent of category. Held contacts leave Active / AO / Done / Archived lists, counts, burst and the outreach queue, and appear only under the new Hold tab (contacts) and "On hold" entry (home), newest held first, with a "held Nd" chip and their real status. Country / city / age bars filter the hold list like any other. Detail has an On hold switch above Move to; releasing returns the contact to its category. Syncs through `hold` / `holdAt`.
+
+## p.27
+- Settings > Cloud backup row: live read of `users/<uid>/backup/meta` (written by NG). Shows last time, contacts, size; amber + "stale" after 2 days; red if none; error text if the doc cannot be read (Firestore rules).
+
 ## p.26
 - Templates carry a scope (country code, site name or blank = default). Burst and the WA button pick the template automatically: site match, then country, then starred default; picking one in the burst screen overrides for that batch. Scope chip shown in Settings > Templates; editor has a Scope select.
 - Seeds: default, PT ("Olá, vi o teu anúncio. Estás disponível agora?"), UK incall line, Thaifriendly first message.
