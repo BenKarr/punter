@@ -44,6 +44,12 @@ Open index.html in a browser, tap "Continue in demo mode". Add, edit, status, ta
 - NAT service flag from PT sites: NAT chip on rows (matched phrase in the tooltip and in all-details), NAT filter pill.
 - Ad lifecycle dates from rua69: published/updated/expires in all-details, row chip 'exp Nd' when under 3 days and 'expired' when past, Expired filter pill for culling dead ads.
 
+## p.32
+- +91 → IN country chip (peach).
+
+## p.31
+- `fmtNum`: +66 shows as 095 230 8748 and +351 as 911 571 727 (UK already 07700 900123). Country chip for +66 was already TH.
+
 ## p.30
 - Contact detail: full-width dark Back bar at the top ("Back to Active / On hold / Home / Burst", position "3 / 8", edit icon on the right); floating circles removed.
 - Carousel: swipe left/right; tap left third = previous, right third = next, middle = open viewer on the visible photo; arrows 44px; hidden slides `pointer-events:none` (this was the "tap opens the last photo" bug); thumbnail strip taps move the carousel.

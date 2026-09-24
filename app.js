@@ -214,6 +214,7 @@ function _ctry(n){var d=(''+n).replace(/[^0-9+]/g,'');
   if(d.indexOf('+49')===0)return{c:'DE',bg:'#efeaf6',fg:'#5b3a8a'};
   if(d.indexOf('+33')===0)return{c:'FR',bg:'#e8eefc',fg:'#2c4a9a'};
   if(d.indexOf('+66')===0)return{c:'TH',bg:'#e0f2f1',fg:'#0f6e64'};
+  if(d.indexOf('+91')===0)return{c:'IN',bg:'#fbead6',fg:'#8a4b12'};
   return{c:'??',bg:'#eef0ef',fg:'#6a807e'};}
 /* ---- p.24: age chip and age bands (all sites) ---- */
 const AGE_BANDS=[['all','Any',null,null],['18-21','18-21',18,21],['22-25','22-25',22,25],['26-30','26-30',26,30],['31-40','31-40',31,40],['40+','40+',41,200],['?','?',null,null]];
@@ -231,7 +232,7 @@ function renderAgeBar(){
 function promptAge(id){ var c=contacts.find(function(x){ return x.id===id; }); var cur=ageNum(c); var v=prompt('Age', cur!=null?String(cur):''); if(v===null) return; v=v.trim(); if(v===''){ store.update(id,{age:null}); return; } var a=parseInt(v,10); if(!(a>=18&&a<=99)){ toast('Age must be 18 to 99'); return; } store.update(id,{age:a}); }
 function _ctryC(c){ if(c&&!c.number&&(c.site==='thaifriendly'||c.country==='Thailand')) return {c:'TH',bg:'#e0f2f1',fg:'#0f6e64'}; return _ctry(c&&c.number); }
 function flagCode(c){ return ({UK:'🇬🇧',RO:'🇷🇴',ES:'🇪🇸',IT:'🇮🇹',DE:'🇩🇪',FR:'🇫🇷',PT:'🇵🇹',TH:'🇹🇭'})[c]||'🏳️'; }
-/* ---- p.22: handle identity, slots with extras. p.23: TH chip teal. p.24: age chip, age bands, manual age. p.25: burst pacing guard. p.26: scoped templates synced with NG. p.27: cloud backup status row. p.28: On hold. p.29: hold. p.30: one-handed detail (top back bar, carousel swipe/tap zones, viewer swipe, history back, edge swipe) ---- */
+/* ---- p.22: handle identity, slots with extras. p.23: TH chip teal. p.24: age chip, age bands, manual age. p.25: burst pacing guard. p.26: scoped templates synced with NG. p.27: cloud backup status row. p.28: On hold. p.29: hold. p.30: one-handed detail. p.31: TH and PT numbers display nationally. p.32: IN country ---- */
 function handleName(c){ return String((c&&c.handle)||'').replace(/^[a-z]+:/,''); }
 function dispName(c){ return c.number ? fmtNum(c.number) : (handleName(c)||c.name||'?'); }
 function slotTotal(sl){ var b=parseFloat(sl&&sl.base)||0; return b+((sl&&sl.extras)||[]).reduce(function(a,x){ return a+(parseFloat(x.amount)||0); },0); }
@@ -718,7 +719,7 @@ function getNuked(){ try{ return JSON.parse(localStorage.getItem('punter_nuked')
 function addNuked(num){ const n=getNuked(); const d=(''+num).replace(/\D/g,''); if(d && !n.includes(d)){ n.push(d); localStorage.setItem('punter_nuked',JSON.stringify(n)); } }
 function nukeFlash(){ const ph=$('app'); const f=document.createElement('div'); f.className='nukeflash'; ph.appendChild(f); setTimeout(()=>f.remove(),560); }
 function nukeOne(id,el,done){ const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(el,()=>{ store.remove(id); done&&done(); }); }
-function fmtNum(n){ if(!n) return ''; const d=(''+n).replace(/\D/g,''); if(d.length===11&&d.startsWith('0')) return d.replace(/(\d{5})(\d{3})(\d{3})/,'$1 $2 $3'); return n; }
+function fmtNum(n){ if(!n) return ''; const d=(''+n).replace(/\D/g,''); if(d.length===11&&d.startsWith('0')) return d.replace(/(\d{5})(\d{3})(\d{3})/,'$1 $2 $3'); if(d.length===11&&d.startsWith('66')) return ('0'+d.slice(2)).replace(/(\d{3})(\d{3})(\d{4})/,'$1 $2 $3'); if(d.length===12&&d.startsWith('351')) return d.slice(3).replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3'); return n; }
 function isStandalone(){ try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
 function launchWa(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d='44'+d.slice(1); const enc=encodeURIComponent(text||''); if(isStandalone()){ location.href='whatsapp://send?phone='+d+'&text='+enc; } else { window.open('https://wa.me/'+d+'?text='+enc,'_blank'); } }
 function launchUrl(u){ try{ const w=window.open(u,'_blank'); if(!w){ location.href=u; } }catch(e){ location.href=u; } }
