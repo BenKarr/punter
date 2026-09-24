@@ -44,6 +44,9 @@ Open index.html in a browser, tap "Continue in demo mode". Add, edit, status, ta
 - NAT service flag from PT sites: NAT chip on rows (matched phrase in the tooltip and in all-details), NAT filter pill.
 - Ad lifecycle dates from rua69: published/updated/expires in all-details, row chip 'exp Nd' when under 3 days and 'expired' when past, Expired filter pill for culling dead ads.
 
+## p.33
+- Bug: adding a number to a Thai contact that had no number yet went through the UK default (0646650815 → +44646650815) because "is Thai" was derived from the existing number. Now `isThaiC(c)` (site, tf: handle, country, or existing +66) drives `toE164P`; a Thai contact never gets a +44 guess, and "+0..." input is treated as national. One-off `repairThaiNumbers()` after sign-in fixes contacts already mangled (+44 6/8/9... on a Thai contact, or +0...).
+
 ## p.32
 - +91 → IN country chip (peach).
 
