@@ -231,7 +231,7 @@ function renderAgeBar(){
   el.querySelectorAll('.cpill').forEach(p=>p.addEventListener('click',()=>{ currentAge=p.dataset.a; localStorage.setItem('punter_age',currentAge); renderAgeBar(); renderList(); }));
 }
 function promptAge(id){ var c=contacts.find(function(x){ return x.id===id; }); var cur=ageNum(c); var v=prompt('Age', cur!=null?String(cur):''); if(v===null) return; v=v.trim(); if(v===''){ store.update(id,{age:null}); return; } var a=parseInt(v,10); if(!(a>=18&&a<=99)){ toast('Age must be 18 to 99'); return; } store.update(id,{age:a}); }
-function _ctryC(c){ if(c&&!c.number&&(c.site==='thaifriendly'||c.country==='Thailand')) return {c:'TH',bg:'#e0f2f1',fg:'#0f6e64'}; return _ctry(c&&c.number); }
+function _ctryC(c){ if(c&&!c.number&&(c.site==='thaifriendly'||c.country==='Thailand')) return {c:'TH',bg:'#e0f2f1',fg:'#0f6e64'}; return _ctry(c?sendNum(c):''); }
 function flagCode(c){ return ({UK:'🇬🇧',RO:'🇷🇴',ES:'🇪🇸',IT:'🇮🇹',DE:'🇩🇪',FR:'🇫🇷',PT:'🇵🇹',TH:'🇹🇭'})[c]||'🏳️'; }
 /* ---- p.22: handle identity, slots with extras. p.23: TH chip teal. p.24: age chip, age bands, manual age. p.25: burst pacing guard. p.26: scoped templates synced with NG. p.27: cloud backup status row. p.28: On hold. p.29: hold. p.30: one-handed detail. p.31: TH and PT numbers display nationally. p.32: IN country. p.33: Thai normalisation. p.34: number shape decides country, no blind +44; big Number and rates button ---- */
 function handleName(c){ return String((c&&c.handle)||'').replace(/^[a-z]+:/,''); }
@@ -249,6 +249,122 @@ var extrasPresets=[], _extrasUnsub=null;
 function watchExtras(uid){ try{ var fb=window.__fb; if(!fb) return; var ref=fb.fs.doc(fb.db,'users',uid,'meta','extras'); if(_extrasUnsub) _extrasUnsub(); _extrasUnsub=fb.fs.onSnapshot(ref,function(snap){ var d=snap.exists()?snap.data():null; extrasPresets=(d&&Array.isArray(d.items))?d.items:[]; }); }catch(e){} }
 async function savePreset(label,amount){ try{ var fb=window.__fb; if(!fb||!user) return; var items=extrasPresets.slice(); var i=items.findIndex(function(p){ return String(p.label).toLowerCase()===label.toLowerCase(); }); if(i>=0) items[i].amount=amount; else items.push({label:label,amount:amount}); await fb.fs.setDoc(fb.fs.doc(fb.db,'users',user.uid,'meta','extras'),{items:items,updatedAt:Date.now()}); }catch(e){} }
 function ratesChips(c){ var sl=slotsOf(c); if(sl.length){ return sl.filter(function(s){ return s.base!=null&&s.base!==''||(s.extras&&s.extras.length); }).slice(0,3).map(function(s){ return '<span class="chip price">'+esc(s.k)+' '+esc(curSymP(c,s.cur))+esc(String(slotTotal(s)))+((s.extras&&s.extras.length)?'<span style="color:var(--blu)">+</span>':'')+'</span>'; }).join(''); } var rates=(c.rates&&c.rates.length)?c.rates.slice(0,2):(c.price?[{d:'',a:c.price}]:[]); return rates.map(function(r){return (r.d?'<span style="color:#888780">'+_dur(r.d)+' </span>':'')+'<span style="color:#0f6e56;font-weight:600">'+esc(r.a)+'</span>';}).join('<span style="color:#888780"> · </span>'); }
+/* ---- p.35: Links. One row per platform, each opens that platform. Value is the bare handle, or a full URL when the link carries no handle (short links, invites, profile.php?id=). ---- */
+var LINKS_P=[
+  {k:'tiktok',l:'TikTok',t:'TT',pre:'tt',host:/(^|\.)tiktok\.com$/,url:function(v){ return 'https://www.tiktok.com/@'+v; }},
+  {k:'instagram',l:'Instagram',t:'IG',pre:'ig',host:/(^|\.)instagram\.com$/,url:function(v){ return 'https://www.instagram.com/'+v; }},
+  {k:'telegram',l:'Telegram',t:'TG',pre:'tg',host:/(^|\.)(t\.me|telegram\.me|telegram\.org)$/,url:function(v){ return 'https://t.me/'+v; }},
+  {k:'snapchat',l:'Snapchat',t:'SC',pre:'sc',host:/(^|\.)snapchat\.com$/,url:function(v){ return 'https://www.snapchat.com/add/'+v; }},
+  {k:'onlyfans',l:'OnlyFans',t:'OF',pre:'of',host:/(^|\.)onlyfans\.com$/,url:function(v){ return 'https://onlyfans.com/'+v; }},
+  {k:'x',l:'X',t:'X',pre:'x',host:/(^|\.)(x\.com|twitter\.com)$/,url:function(v){ return 'https://x.com/'+v; }},
+  {k:'facebook',l:'Facebook',t:'FB',pre:'fb',host:/(^|\.)(facebook\.com|fb\.com)$/,url:function(v){ return 'https://www.facebook.com/'+v; }},
+  {k:'other',l:'Other',t:'WWW',pre:null,host:null,url:function(v){ return v; }}
+];
+function linkDef(k){ for(var i=0;i<LINKS_P.length;i++) if(LINKS_P[i].k===k) return LINKS_P[i]; return null; }
+function defByPre(pre){ for(var i=0;i<LINKS_P.length;i++) if(LINKS_P[i].pre===pre) return LINKS_P[i]; return LINKS_P[0]; }
+function isUrlish(v){ return /^https?:\/\//i.test(v)||/^www\./i.test(v)||/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}\//i.test(v); }
+var LINK_SKIP={ instagram:['p','reel','reels','stories','explore','accounts','tv'], x:['i','home','search','hashtag','intent','share','explore'], facebook:['share','watch','groups','pages','events','photo','photo.php','story.php','profile.php','people','marketplace','reel','sharer','sharer.php'], telegram:['joinchat','s','addstickers','proxy','share'], onlyfans:['my','posts'], snapchat:['add','discover','t','p','spotlight'] };
+/* parseLinkP(raw, k) -> {k, v} or null. A pasted URL picks its own platform from the host; a bare handle needs k. */
+function parseLinkP(raw,k){
+  raw=String(raw||'').trim(); if(!raw) return null;
+  if(isUrlish(raw)){
+    var u; try{ u=new URL(/^https?:\/\//i.test(raw)?raw:('https://'+raw)); }catch(e){ return null; }
+    var host=u.hostname.toLowerCase().replace(/^(www|m|mobile|vm|vt)\./,'');
+    var def=null; for(var i=0;i<LINKS_P.length;i++){ if(LINKS_P[i].host&&LINKS_P[i].host.test(host)){ def=LINKS_P[i]; break; } }
+    var segs=u.pathname.split('/').filter(Boolean);
+    var keep=u.origin+u.pathname.replace(/\/+$/,'')+(u.searchParams.get('id')?('?id='+encodeURIComponent(u.searchParams.get('id'))):'');
+    if(!def) return { k:'other', v:keep };
+    var h=null;
+    if(def.k==='tiktok'){ if(segs[0]&&segs[0].charAt(0)==='@'&&segs[0].length>1) h=segs[0].slice(1); }
+    else if(def.k==='snapchat'){ if(segs[0]==='add'&&segs[1]) h=segs[1]; else if(segs[0]&&segs[0].charAt(0)==='@') h=segs[0].slice(1); }
+    else if(def.k==='telegram'){ if(segs[0]&&segs[0].charAt(0)!=='+'&&(LINK_SKIP.telegram.indexOf(segs[0].toLowerCase())<0)) h=segs[0].replace(/^@/,''); }
+    else { var s0=segs[0]?segs[0].replace(/^@/,''):''; if(s0&&(LINK_SKIP[def.k]||[]).indexOf(s0.toLowerCase())<0) h=s0; }
+    if(h&&/^[A-Za-z0-9._-]{1,64}$/.test(h)) return { k:def.k, v:h };
+    return { k:def.k, v:keep };
+  }
+  if(!k||k==='other') return null;
+  var hv=raw.replace(/^@/,''); if(!/^[A-Za-z0-9._-]{1,64}$/.test(hv)) return null;
+  return { k:k, v:hv };
+}
+function linkUrlP(k,v){ var d=linkDef(k); if(!d||!v) return null; return isUrlish(v)?(/^https?:\/\//i.test(v)?v:('https://'+v)):d.url(v); }
+function linkDispP(k,v){ if(!v) return ''; if(isUrlish(v)) return String(v).replace(/^https?:\/\/(www\.)?/i,'').slice(0,40); return '@'+v; }
+function linksOf(c){ var out=[]; var L=(c&&c.links)||{}; LINKS_P.forEach(function(d){ if(L[d.k]) out.push({k:d.k,v:L[d.k],d:d}); }); return out; }
+/* a contact with no number takes its identity from the first link that carries a handle: tt:user161147935, like tf:kitty546 */
+function handleFromLinks(L){ for(var i=0;i<LINKS_P.length;i++){ var d=LINKS_P[i], v=L&&L[d.k]; if(d.pre&&v&&!isUrlish(v)) return d.pre+':'+String(v).toLowerCase(); } return null; }
+function launchLink(k,v){ var u=linkUrlP(k,v); if(!u){ toast('No link'); return; } launchUrl(u); }
+function renderLinks(c){
+  var box=$('dlinks'); if(!box) return;
+  var rows=linksOf(c);
+  box.innerHTML=rows.map(function(r){ return '<div class="lrow"><div class="lopen" data-lopen="'+r.k+'"><span class="ltile">'+esc(r.d.t)+'</span><span class="lval">'+esc(linkDispP(r.k,r.v))+'</span><svg class="ic" viewBox="0 0 24 24" style="margin-left:auto"><path d="M7 17L17 7M9 7h8v8"/></svg></div><button class="ledit" data-ledit="'+r.k+'" aria-label="Edit '+esc(r.d.l)+' link"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button></div>'; }).join('');
+  box.querySelectorAll('[data-lopen]').forEach(function(el){ el.addEventListener('click',function(){ launchLink(el.dataset.lopen,(c.links||{})[el.dataset.lopen]); }); });
+  box.querySelectorAll('[data-ledit]').forEach(function(el){ el.addEventListener('click',function(){ openLinkSheet({ get:function(){ return Object.assign({},store.get(c.id).links||{}); }, set:function(L){ store.update(c.id,{links:L}); if(currentId===c.id) renderLinks(Object.assign({},store.get(c.id)||c,{links:L})); } }, el.dataset.ledit); }); });
+}
+/* openLinkSheet(ctx, k): ctx.get() -> links object, ctx.set(links). k = platform being edited, or null for a new link. */
+function openLinkSheet(ctx,k){
+  var o=ensureOvl(); var L=ctx.get(); var editK=k&&L[k]?k:null;
+  var draft={ k:editK||null, raw:editK?(isUrlish(L[editK])?L[editK]:'@'+L[editK]):'' };
+  function detect(){ var p=parseLinkP(draft.raw,draft.k); if(!draft.raw.trim()) return {msg:'',ok:false}; if(!p){ return {msg:draft.k?('Not a '+linkDef(draft.k).l+' link or handle'):'Pick the platform for a bare handle',ok:false,warn:true}; } if(isUrlish(draft.raw)&&p.k!==draft.k) draft.k=p.k; return {msg:linkDef(p.k).l+' detected, saves as '+linkDispP(p.k,p.v)+(isUrlish(p.v)?' (no handle in that link, kept as pasted)':''),ok:true,p:p}; }
+  function html(){ var d=detect(); return '<div class="ovback"></div><div class="sheet"><div class="sheeth"><div class="t">'+(editK?'Edit link':'Add link')+'</div><div class="ovx">\u00d7</div></div>'
+    +'<div class="rs-fld"><label>Paste a link or type a handle</label><input class="rs-in" id="lkIn" placeholder="https://www.tiktok.com/@... or @handle" value="'+esc(draft.raw)+'" autocapitalize="none" autocorrect="off"></div>'
+    +'<div class="lk-det'+(d.ok?' ok':(d.warn?' warn':''))+'" id="lkDet">'+esc(d.msg)+'</div>'
+    +'<div class="rs-prelbl">Platform</div><div class="lk-grid">'+LINKS_P.map(function(p){ return '<button class="lk-p'+(draft.k===p.k?' on':'')+'" data-lkp="'+p.k+'"><span class="ltile">'+esc(p.t)+'</span>'+esc(p.l)+'</button>'; }).join('')+'</div>'
+    +'<div class="addnote">A pasted link picks the platform for you. A bare handle needs one tapped. Links with no handle in them are kept as pasted.</div>'
+    +'<div class="sendbtns"><button class="bwa" id="lkSave">'+(editK?'Save':'Save link')+'</button>'+(editK?'<button class="lk-rm" id="lkRm">Remove</button>':'')+'</div></div>'; }
+  function render(){ o.innerHTML=html(); o.style.display='block'; wire(); }
+  function wire(){
+    o.querySelector('.ovback').onclick=closeOvl; o.querySelector('.ovx').onclick=closeOvl;
+    var inp=o.querySelector('#lkIn'); inp.addEventListener('input',function(){ draft.raw=inp.value; var d=detect(); var det=o.querySelector('#lkDet'); det.textContent=d.msg; det.className='lk-det'+(d.ok?' ok':(d.warn?' warn':'')); o.querySelectorAll('[data-lkp]').forEach(function(b){ b.classList.toggle('on',b.dataset.lkp===draft.k); }); });
+    o.querySelectorAll('[data-lkp]').forEach(function(b){ b.addEventListener('click',function(){ draft.k=b.dataset.lkp; render(); var i=o.querySelector('#lkIn'); if(i&&!draft.raw) i.focus(); }); });
+    o.querySelector('#lkSave').onclick=function(){ var d=detect(); if(!d.ok){ toast(d.msg||'Paste a link or type a handle'); return; } var L2=ctx.get(); if(editK&&editK!==d.p.k) delete L2[editK]; L2[d.p.k]=d.p.v; ctx.set(L2); closeOvl(); toast('Link saved'); };
+    var rm=o.querySelector('#lkRm'); if(rm) rm.onclick=function(){ var L2=ctx.get(); delete L2[editK]; ctx.set(L2); closeOvl(); toast('Link removed'); };
+  }
+  render(); var i=o.querySelector('#lkIn'); if(i&&!editK) i.focus();
+}
+/* p.37: Export photos. Her photos go through punter's cloud function one at a time: it copies each into your Firebase Storage,
+   writes her details inside (username, number, age, TikTok, rates, source link) and hands the JPEG back. Save then opens the
+   iPhone share sheet (Save Images or Save to Files). It needs its own tap because iPhone only opens the share sheet from a tap. */
+function b64ToBytes(b64){ var bin=atob(b64), out=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out; }
+async function runExport(c, call, onStep){
+  var n=(c.images||[]).length, files=[], skipped=[];
+  for(var i=0;i<n;i++){
+    if(onStep) onStep(i,n);
+    var r;
+    try{ r=((await call({ cid:c.id, index:i }))||{}).data||{}; }
+    catch(e){ var code=String((e&&e.code)||''); if(/unauthenticated/.test(code)) return { error:'signin', files:files, skipped:skipped }; if(i===0&&/not-found|internal|unavailable|unimplemented|failed-precondition/.test(code)) return { error:'setup', files:files, skipped:skipped }; skipped.push({ index:i, reason:'unreachable' }); continue; }
+    if(r.ok&&r.b64) files.push({ name:r.name, bytes:b64ToBytes(r.b64) }); else skipped.push({ index:i, reason:r.reason||'unreachable' });
+  }
+  if(onStep) onStep(n,n);
+  return { files:files, skipped:skipped };
+}
+var EXP_WHY={ gone:'photo removed from the site', blocked:'the site refused', unreachable:'could not load', 'not a photo':'not a photo', none:'no photo', missing:'contact not in your Firebase' };
+function openExportSheet(c){
+  var o=ensureOvl(); var n=(c.images||[]).length; var f=window.JpegMeta?JpegMeta.detailsOf(c):{ stem:dispName(c), lines:[] };
+  var nm=function(i){ return window.JpegMeta?JpegMeta.fileName(f.stem,i):(f.stem+' '+String(i+1).padStart(2,'0')+'.jpg'); };
+  var names='<div class="exp-box">'+[0,1].filter(function(i){ return i<n; }).map(function(i){ return '<div>'+esc(nm(i))+'</div>'; }).join('')+(n>3?'<div class="mut">\u2026</div>':'')+(n>2?'<div>'+esc(nm(n-1))+'</div>':'')+'</div>';
+  var inside='<div class="exp-box">'+f.lines.map(function(l){ return '<div>'+esc(l)+'</div>'; }).join('')+'</div>';
+  var prog=function(label,right,pct,col){ return '<div class="exp-prog"><div class="exp-pl"><span>'+label+'</span><span class="mono">'+right+'</span></div><div class="exp-bar"><i style="width:'+pct+'%;background:'+(col||'var(--amber)')+'"></i></div></div>'; };
+  var show=function(html){ o.innerHTML='<div class="ovback"></div><div class="sheet"><div class="sheeth"><div class="t">Export photos</div><div class="ovx">\u00d7</div></div><div class="exp-sub">'+esc(f.stem)+' \u00b7 '+n+' photo'+(n===1?'':'s')+'</div>'+html+'</div>'; o.style.display='block'; o.querySelector('.ovback').onclick=closeOvl; o.querySelector('.ovx').onclick=closeOvl; };
+  var fb=window.__fb;
+  if(!user||!fb){ show('<div class="exp-note warn">Sign in to punter to export photos.</div>'); return; }
+  if(!fb.fns||!fb.fnM){ show('<div class="exp-note warn">Photo export could not load. Check your signal and try again.</div>'); return; }
+  var call=fb.fnM.httpsCallable(fb.fns,'exportPhoto');
+  show(prog('Copying to your Firebase','0 of '+n,0)+'<div class="rs-prelbl">File names</div>'+names+'<div class="rs-prelbl">Inside each photo</div>'+inside+'<button class="exp-go" disabled>Preparing\u2026</button>');
+  runExport(c, call, function(i,total){ var p=o.querySelector('.exp-prog'); if(p) p.outerHTML=prog('Copying to your Firebase',i+' of '+total,Math.round(100*i/Math.max(total,1))); }).then(function(res){
+    if(res.error==='setup'){ show('<div class="exp-note warn">Photo export isn\u2019t switched on yet: the cloud function isn\u2019t deployed. The steps are in SETUP-export.md.</div>'); return; }
+    if(res.error==='signin'){ show('<div class="exp-note warn">Sign in again, then export.</div>'); return; }
+    var k=res.files.length, sk=res.skipped.length;
+    var why=sk?('<div class="exp-note warn">'+sk+' skipped: '+res.skipped.map(function(s){ return EXP_WHY[s.reason]||s.reason; }).filter(function(v,i,a){ return a.indexOf(v)===i; }).join(', ')+'</div>'):'';
+    if(!k){ show(prog('Nothing to save','0 of '+n,100,'var(--red2)')+why); return; }
+    show(prog('Ready',k+' of '+n,100,'var(--grn2)')+why+'<div class="rs-prelbl">Inside each photo</div>'+inside+'<button class="exp-go" id="expSave">Save '+k+' photo'+(k===1?'':'s')+'</button><div class="exp-note">Save Images puts them in Photos: iPhone drops the file names and the details show as each photo\u2019s caption. Save to Files keeps the names and keeps them out of your camera roll.</div>');
+    o.querySelector('#expSave').onclick=function(){ saveExported(res.files); };
+  });
+}
+function saveExported(list){
+  var files=list.map(function(x){ return new File([x.bytes], x.name, { type:'image/jpeg' }); });
+  try{ if(navigator.canShare&&navigator.canShare({ files:files })){ navigator.share({ files:files }).then(function(){ toast('Saved'); }).catch(function(){}); return; } }catch(e){}
+  files.forEach(function(fl){ var a=document.createElement('a'); a.href=URL.createObjectURL(fl); a.download=fl.name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },4000); });
+  toast('Downloading '+files.length);
+}
 function openRateSheet(id){
   var c=store.get(id); if(!c) return; var o=ensureOvl(); var defs=slotDefsP(c); var th=isThaiC(c);
   var have={}; slotsOf(c).forEach(function(s){ have[s.k]=s; });
@@ -276,7 +392,7 @@ function openRateSheet(id){
       var slots=defs.map(function(d){ var k=d[0]; var b=draft.base[k].trim(); return {k:k,base:b===''?null:b,cur:th?'THB':((have[k]&&have[k].cur)||null),extras:draft.x[k]}; }).filter(function(s){ return s.base!=null||s.extras.length; });
       var patch={ slots:slots };
       var raw=numVal.trim();
-      if(raw){ var e=toE164P(raw,th); if(!e){ toast('Number not readable'); return; } if(e!==c.number){ var digs=e.replace(/\D/g,''); var other=contacts.find(function(x){ return x.id!==c.id && !x.mergedInto && String(x.number||'').replace(/\D/g,'')===digs; }); if(other){ await mergeIntoP(other,c,slots); closeOvl(); toast('Merged into '+dispName(other)); openDetail(other.id); return; } patch.number=e; patch.e164=e; if(c.number&&c.number!==e){ patch.alt=(c.alt?c.alt+', ':'')+c.number; } } }
+      if(raw){ var e=toE164P(raw,th); if(!e){ toast('Number not readable'); return; } var curE=c.e164||toE164P(c.number||'',th); if(!c.e164&&e===curE) patch.e164=e; if(e!==c.number&&e!==curE){ var digs=e.replace(/\D/g,''); var other=contacts.find(function(x){ return x.id!==c.id && !x.mergedInto && String(x.number||'').replace(/\D/g,'')===digs; }); if(other){ await mergeIntoP(other,c,slots); closeOvl(); toast('Merged into '+dispName(other)); openDetail(other.id); return; } patch.number=e; patch.e164=e; if(c.number&&c.number!==e){ patch.alt=(c.alt?c.alt+', ':'')+c.number; } } }
       await store.update(c.id,patch); closeOvl(); toast('Saved'); if(currentId===c.id) openDetail(c.id);
     };
   }
@@ -330,7 +446,7 @@ function rowHtml(c,i){
    +'<div style="width:5px;background:'+edge+';flex:none"></div>'
    +'<div style="width:104px;flex:none;align-self:stretch;background:'+photo+';position:relative;border-radius:0">'+cnt+'</div>'
    +'<div style="flex:1;min-width:0;padding:9px 11px;display:flex;flex-direction:column;justify-content:center">'
-   +'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="rnum">'+esc(dispName(c))+'</span>'+ageChip(c)+(c.site==='thaifriendly'?'<span class="chip h">TF</span>':'')+aoBadge(c)+gch+'</span>'+pin+'</div>'
+   +'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="rnum">'+esc(dispName(c))+'</span>'+ageChip(c)+(c.site==='thaifriendly'?'<span class="chip h">TF</span>':(c.site&&linkDef(c.site)?'<span class="chip h">'+esc(linkDef(c.site).t)+'</span>':''))+aoBadge(c)+gch+'</span>'+pin+'</div>'
    +'<div style="display:flex;align-items:center;gap:5px;margin-top:6px">'
    +(c.hold?'<span style="font-family:var(--mo);font-size:10px;font-weight:700;color:var(--yellow-d);background:var(--yellow-bg);border:1px solid var(--yellow-line);border-radius:6px;padding:2px 6px;flex:none">held '+relTime(c.holdAt)+(c.holdReason?' \u00b7 '+esc(c.holdReason):'')+'</span>':'')
    +(st?'<span class="stpill '+st+'">'+statusLabel(st)+'</span>':'')
@@ -364,7 +480,7 @@ function visibleContacts(){
       else if(currentFilter==='expired'){ var _x=adExpMs(c); if(!_x||_x>=Date.now()) return false; }
       else { if(!(c.tags||[]).includes(currentFilter)) return false; }
     }
-    if(q){ const hay=((c.number||'')+' '+(c.name||'')+' '+handleName(c)+' '+(c.city||'')+' '+(c.location||'')+' '+(c.region||'')).toLowerCase(); if(!hay.includes(q)) return false; }
+    if(q){ const hay=((c.number||'')+' '+(c.name||'')+' '+handleName(c)+' '+(c.city||'')+' '+(c.location||'')+' '+(c.region||'')+' '+Object.keys(c.links||{}).map(function(k){ return String(c.links[k]||''); }).join(' ')).toLowerCase(); if(!hay.includes(q)) return false; }
     return true;
   });
 }
@@ -490,7 +606,7 @@ function buildCarousel(c){
   const imgs=(c.images&&c.images.length)?c.images:['__ph0','__ph1'];
   const grads=['#8a6d9e,#4a3658','#6d8a9e,#34505a','#9e8a6d,#5a4a34','#6d9e7a,#34503f'];
   const car=$('carou'); car.innerHTML='';
-  imgs.forEach((src,i)=>{ const d=document.createElement('div'); d.className='slide'+(i===0?' on':''); d.style.background=src.startsWith('__ph')?`linear-gradient(135deg,${grads[i%grads.length]})`:`center/cover url('${src}')`; d.dataset.i=i; if(!(c.images&&c.images.length)) d.innerHTML='<span style="font-family:var(--mo);color:#fff8;font-size:11px">no photo yet</span>'; car.appendChild(d); });
+  imgs.forEach((src,i)=>{ const d=document.createElement('div'); d.className='slide'+(i===0?' on':''); d.style.background=src.startsWith('__ph')?`linear-gradient(135deg,${grads[i%grads.length]})`:`center/cover url('${src}')`; d.dataset.i=i; if(!src.startsWith('__ph')&&c.imageCopies&&c.imageCopies[src]){ const cp=c.imageCopies[src]; const im=new Image(); im.onerror=()=>{ d.style.background=`center/cover url('${cp}')`; }; im.src=src; } if(!(c.images&&c.images.length)) d.innerHTML='<span style="font-family:var(--mo);color:#fff8;font-size:11px">no photo yet</span>'; car.appendChild(d); });
   const nav=`<div class="cnav l" id="carPrev"><svg class="ic" viewBox="0 0 24 24" style="color:#fff"><path d="M15 18l-6-6 6-6"/></svg></div><div class="cnav r" id="carNext"><svg class="ic" viewBox="0 0 24 24" style="color:#fff"><path d="M9 18l6-6-6-6"/></svg></div><div class="dots" id="dots"></div>`;
   car.insertAdjacentHTML('beforeend',nav);
   const dots=$('dots'); dots.innerHTML=imgs.map((_,i)=>`<i class="${i===0?'on':''}"></i>`).join('');
@@ -547,6 +663,8 @@ function openDetail(id){ try{ const _b=$('t-contacts').querySelector('.body'); i
   { $('ratesSec').style.display=''; var _sl=slotsOf(c); if(_sl.length){ $('drates').innerHTML=_sl.map(function(s){ return '<div class="rate"><span class="d">'+esc(s.k)+'</span><span class="a">'+esc(curSymP(c,s.cur))+esc(String(slotTotal(s)))+'</span></div>'+(s.extras||[]).map(function(x){ return '<div class="rate" style="font-size:11px;color:var(--blu)"><span class="d" style="color:var(--blu)">+ '+esc(x.label)+'</span><span class="a" style="color:var(--blu)">'+esc(String(x.amount))+'</span></div>'; }).join(''); }).join(''); } else if(c.rates&&c.rates.length){ $('drates').innerHTML=c.rates.map(r=>`<div class="rate"><span class="d">${esc(r.d)}</span><span class="a">${esc(r.a)}</span></div>`).join(''); } else { $('drates').innerHTML='<div class="rate"><span class="d" style="color:var(--mut3)">'+(c.number?'no rates yet':'no number, no rates yet')+'</span><span class="a"></span></div>'; } }
   $('dnotes').textContent=c.notes||'';
   if(c.url){ $('sourceSec').style.display=''; $('dsourceurl').textContent=c.url.replace(/^https?:\/\//,'').slice(0,46); } else $('sourceSec').style.display='none';
+  renderLinks(c);
+  { const _xn=(c.images||[]).filter(u=>typeof u==='string'&&u&&u.indexOf('__ph')!==0).length; $('expBtn').style.display=_xn?'':'none'; $('expBtnTxt').textContent='Export photos ('+_xn+')'; }
   $('catMove').querySelectorAll('.catbtn').forEach(b=>b.classList.toggle('on', b.dataset.cat===(c.cat||'active')));
   const area=(c.address||c.location||c.region||'').trim();
   if(area){ $('mapSec').style.display=''; $('mapArea').textContent=area; $('mapFrame').src='https://www.google.com/maps?q='+encodeURIComponent(area)+'&output=embed'; }
@@ -728,13 +846,15 @@ function nukeFlash(){ const ph=$('app'); const f=document.createElement('div'); 
 function nukeOne(id,el,done){ const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(el,()=>{ store.remove(id); done&&done(); }); }
 function fmtNum(n){ if(!n) return ''; const d=(''+n).replace(/\D/g,''); if(d.length===11&&d.startsWith('0')) return d.replace(/(\d{5})(\d{3})(\d{3})/,'$1 $2 $3'); if(d.length===11&&d.startsWith('66')) return ('0'+d.slice(2)).replace(/(\d{3})(\d{3})(\d{4})/,'$1 $2 $3'); if(d.length===12&&d.startsWith('351')) return d.slice(3).replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3'); return n; }
 function isStandalone(){ try{ return matchMedia('(display-mode: standalone)').matches || navigator.standalone===true; }catch(e){ return false; } }
-function launchWa(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d=intlOfNational(d)||('44'+d.slice(1)); const enc=encodeURIComponent(text||''); if(isStandalone()){ location.href='whatsapp://send?phone='+d+'&text='+enc; } else { window.open('https://wa.me/'+d+'?text='+enc,'_blank'); } }
+/* p.36: the number WhatsApp and SMS go to. The stored e164 wins; the number field is often a national display (912 345 678 for Portugal) that WhatsApp reads as another country. */
+function sendNum(c){ if(!c) return ''; var e=String(c.e164||''); if(/^\+\d{9,15}$/.test(e)) return e; var t=toE164P(c.number||'',isThaiC(c)); return t||String(c.number||''); }
+function launchWa(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')||/^9\d{8}$/.test(d)) d=intlOfNational(d)||('44'+d.slice(1)); const enc=encodeURIComponent(text||''); if(isStandalone()){ location.href='whatsapp://send?phone='+d+'&text='+enc; } else { window.open('https://wa.me/'+d+'?text='+enc,'_blank'); } }
 function launchUrl(u){ try{ const w=window.open(u,'_blank'); if(!w){ location.href=u; } }catch(e){ location.href=u; } }
-function waLink(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')) d=intlOfNational(d)||('44'+d.slice(1)); return `https://wa.me/${d}?text=${encodeURIComponent(text)}`; }
+function waLink(n,text){ let d=(''+n).replace(/\D/g,''); if(d.startsWith('0')||/^9\d{8}$/.test(d)) d=intlOfNational(d)||('44'+d.slice(1)); return `https://wa.me/${d}?text=${encodeURIComponent(text)}`; }
 /* ---------------- Fix 11: channel routing ---------------- */
-function channelFor(c){ if(c && c.channel) return c.channel; if(sessionForceWa) return 'wa'; return _ctry(c&&c.number).c==='UK' ? routeUK : routeOther; }
-function channelUrl(c,ch){ const num=(''+c.number).replace(/[^\d+]/g,''); return ch==='sms' ? ('sms:'+num+'?&body='+encodeURIComponent(template())) : waLink(c.number,template()); }
-function openChannelInApp(c){ const ch=channelFor(c); if(ch==='wa'){ launchWa(c.number,tplOverride!=null?templateText(tplOverride):templateFor(c)); } else { location.href=channelUrl(c,ch); } return ch; }
+function channelFor(c){ if(c && c.channel) return c.channel; if(sessionForceWa) return 'wa'; return (c&&_ctryC(c).c==='UK') ? routeUK : routeOther; }
+function channelUrl(c,ch){ const num=sendNum(c).replace(/[^\d+]/g,''); return ch==='sms' ? ('sms:'+num+'?&body='+encodeURIComponent(template())) : waLink(num,template()); }
+function openChannelInApp(c){ const ch=channelFor(c); if(ch==='wa'){ launchWa(sendNum(c),tplOverride!=null?templateText(tplOverride):templateFor(c)); } else { location.href=channelUrl(c,ch); } return ch; }
 /* ---------------- Fix 10: capture from share target ---------------- */
 function captureFromParams(p){
   const imgs=(p.get('imgs')||'').split('|').map(s=>s.trim()).filter(Boolean);
@@ -789,15 +909,16 @@ async function tryUnlock(){
 async function initFirebase(){
   if(!firebaseConfig) return false;
   try{
-    const [appM,authM,fsM]=await Promise.all([
+    const [appM,authM,fsM,fnM]=await Promise.all([
       import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
       import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js').catch(()=>null)
     ]);
     const app=appM.initializeApp(firebaseConfig);
     const auth=authM.getAuth(app);
     const db=fsM.getFirestore(app);
-    window.__fb={ app, auth, db, fs:fsM, authM };
+    window.__fb={ app, auth, db, fs:fsM, authM, fnM, fns: fnM ? fnM.getFunctions(app) : null };
     return true;
   }catch(e){ console.warn('Firebase init failed', e); return false; }
 }
@@ -805,7 +926,11 @@ function proceedAfterLock(){
   const {auth,authM}=window.__fb;
   authM.onAuthStateChanged(auth, u=>{ if(u){ user=u; setStore(FirestoreStore(u.uid)); watchExtras(u.uid); watchTemplates(u.uid); watchCloudBackup(u.uid); setTimeout(repairThaiNumbers,4000); enterApp(); } else { go('s-signin'); } });
 }
-function enterApp(){ showTab('t-home'); const p=new URLSearchParams(location.search); if(p.get('cap')==='1'){ const done=captureFromParams(p); try{ history.replaceState({},'','./'); }catch(e){} if(done) return; } const u=p.get('url')||p.get('text'); if(u){ go('s-add'); addMode('link'); if($('a-url')) $('a-url').value=u; $('shareUrl').textContent=u.slice(0,46); try{ history.replaceState({},'','./'); }catch(e){} } }
+var addLinks={};
+function renderAddLinks(){ var box=$('addLinksRows'); if(!box) return; var rows=linksOf({links:addLinks}); box.innerHTML=rows.map(function(r){ return '<div class="lrow"><div class="lopen" data-alk="'+r.k+'"><span class="ltile">'+esc(r.d.t)+'</span><span class="lval">'+esc(linkDispP(r.k,r.v))+'</span></div><button class="ledit" data-alkrm="'+r.k+'" aria-label="Remove '+esc(r.d.l)+' link"><svg class="ic" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>'; }).join(''); box.querySelectorAll('[data-alk]').forEach(function(el){ el.addEventListener('click',function(){ openLinkSheet({ get:function(){ return Object.assign({},addLinks); }, set:function(L){ addLinks=L; renderAddLinks(); } },el.dataset.alk); }); }); box.querySelectorAll('[data-alkrm]').forEach(function(el){ el.addEventListener('click',function(){ delete addLinks[el.dataset.alkrm]; renderAddLinks(); }); }); }
+/* p.35: a shared social profile link (TikTok app: Share profile, or Copy link) lands here as ?url=. It becomes a Links row plus a name, not a listing URL. */
+function addFromSharedLink(u){ var p=parseLinkP(u,null); if(!p||p.k==='other') return false; go('s-add'); addMode('link'); addLinks={}; addLinks[p.k]=p.v; renderAddLinks(); if($('a-url')) $('a-url').value=''; var noH=isUrlish(p.v); if(!noH&&$('a-name2')&&!$('a-name2').value) $('a-name2').value=p.v; $('shareUrl').textContent=noH?(linkDef(p.k).l+' link with no @handle (a video?). Share her profile instead, or add her number.'):('From '+linkDef(p.k).l+' share \u00b7 '+linkDispP(p.k,p.v)); return true; }
+function enterApp(){ showTab('t-home'); const p=new URLSearchParams(location.search); if(p.get('cap')==='1'){ const done=captureFromParams(p); try{ history.replaceState({},'','./'); }catch(e){} if(done) return; } const u=p.get('url')||p.get('text')||p.get('link'); if(u){ const um=(String(u).match(/https?:\/\/[^\s]+/)||[])[0]||u; if(!addFromSharedLink(um)){ go('s-add'); addMode('link'); if($('a-url')) $('a-url').value=um; $('shareUrl').textContent=um.slice(0,46); } try{ history.replaceState({},'','./'); }catch(e){} } }
 async function boot(){
   if('serviceWorker' in navigator){ try{ await navigator.serviceWorker.register('sw.js'); }catch(e){} }
   const ok = await initFirebase();
@@ -858,8 +983,8 @@ function wire(){
   $('delBtn').addEventListener('click',()=>{ const id=currentId; const body=$('s-detail').querySelector('.body'); const c=store.get(id); if(c) addNuked(c.number); nukeFlash(); explode(body,()=>{ body.classList.remove('dissolving'); store.remove(id); back(); }); toast('Nuked, number remembered'); });
   $('actCopy').addEventListener('click',()=>{ const c=store.get(currentId); navigator.clipboard?.writeText(c.number||handleName(c)); toast('Copied '+dispName(c)); });
   $('rateSheetBtn').addEventListener('click',()=>openRateSheet(currentId));
-  $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); if(!c.number){ toast('No number yet'); openRateSheet(currentId); return; } tplPicker('WhatsApp',(i)=>{ activeTplIdx=i; store.update(currentId,{lastWa:Date.now()}); refreshContacted(); launchWa(c.number,templateText(i)); }); });
-  $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); if(!c.number){ toast('No number yet'); openRateSheet(currentId); return; } tplPicker('SMS',(i)=>{ activeTplIdx=i; store.update(currentId,{lastSms:Date.now()}); refreshContacted(); { const num=(''+c.number).replace(/[^\d+]/g,''); launchUrl('sms:'+num+'?&body='+encodeURIComponent(templateText(i))); } }); });
+  $('actWa').addEventListener('click',()=>{ const c=store.get(currentId); if(!c.number){ toast('No number yet'); openRateSheet(currentId); return; } tplPicker('WhatsApp',(i)=>{ activeTplIdx=i; store.update(currentId,{lastWa:Date.now()}); refreshContacted(); launchWa(sendNum(c),templateText(i)); }); });
+  $('actSms').addEventListener('click',()=>{ const c=store.get(currentId); if(!c.number){ toast('No number yet'); openRateSheet(currentId); return; } tplPicker('SMS',(i)=>{ activeTplIdx=i; store.update(currentId,{lastSms:Date.now()}); refreshContacted(); { const num=sendNum(c).replace(/[^\d+]/g,''); launchUrl('sms:'+num+'?&body='+encodeURIComponent(templateText(i))); } }); });
   $('actMap').addEventListener('click',()=>{ const c=store.get(currentId); const q=(c.address||c.location||c.region||'').trim(); if(!q){ toast('No location set'); return; } launchUrl('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)); });
   $('dsource').addEventListener('click',()=>{ const c=store.get(currentId); if(c&&c.url) window.open(c.url,'_blank','noopener'); });
   // photo
@@ -870,13 +995,27 @@ function wire(){
   // add
   $('addBack').addEventListener('click',()=>back()); $('addCancel').addEventListener('click',()=>back());
   $('am-link').addEventListener('click',()=>addMode('link')); $('am-man').addEventListener('click',()=>addMode('manual'));
+  $('expBtn').addEventListener('click',()=>{ const c=store.get(currentId); if(c) openExportSheet(c); });
+  $('linkAddBtn').addEventListener('click',()=>{ const c=store.get(currentId); if(!c) return; openLinkSheet({ get:()=>Object.assign({},store.get(c.id).links||{}), set:(L)=>{ store.update(c.id,{links:L}); if(currentId===c.id) renderLinks(Object.assign({},store.get(c.id)||c,{links:L})); } },null); });
+  $('addLinkBtn').addEventListener('click',()=>{ openLinkSheet({ get:()=>Object.assign({},addLinks), set:(L)=>{ addLinks=L; renderAddLinks(); } },null); });
   $('addSave').addEventListener('click',()=>{
     const link=$('am-link').classList.contains('on');
     const rawNum=(link?$('a-number2'):$('a-number')).value.trim();
-    if(!rawNum){ toast('Add a phone number'); return; }
-    const number=toE164P(rawNum,false); if(!number){ toast('Number not readable: use +CC..., 07... (UK), 06/08/09... (TH) or 9... (PT)'); return; }
-    const c={ number, name:(link?$('a-name2'):$('a-name')).value.trim(), url:link?$('a-url').value.trim():'', location:link?'':$('a-loc').value.trim(), price:link?'':$('a-price').value.trim(), status:null, tags:[], images:[], grabs:1, cat:'active' };
-    store.add(c); ['a-number2','a-name2','a-url','a-number','a-name','a-loc','a-price'].forEach(i=>{ if($(i)) $(i).value=''; });
+    const hasLinks=Object.keys(addLinks).length>0;
+    /* p.35: a contact can be saved on a link alone. Its handle (tt:..., ig:...) is the key until a number arrives, same as a thaifriendly username. */
+    if(!rawNum&&!hasLinks){ toast('Add a phone number or a link'); return; }
+    let number='';
+    if(rawNum){ number=toE164P(rawNum,false); if(!number){ toast('Number not readable: use +CC..., 07... (UK), 06/08/09... (TH) or 9... (PT)'); return; } }
+    const handle=number?null:handleFromLinks(addLinks);
+    if(!number&&!handle){ toast('That link carries no handle, add a number or a profile link'); return; }
+    if(handle){ const dupH=contacts.find(x=>!x.mergedInto&&(x.handle===handle||(x.handles||[]).indexOf(handle)>=0)); if(dupH){ const L=Object.assign({},dupH.links||{},addLinks); store.update(dupH.id,{links:L}); addLinks={}; renderAddLinks(); toast('Already saved as '+dispName(dupH)+', links added'); openDetail(dupH.id); return; } }
+    const name=(link?$('a-name2'):$('a-name')).value.trim();
+    const site=handle?defByPre(handle.split(':')[0]).k:undefined;
+    const c={ number, name, url:link?$('a-url').value.trim():'', location:link?'':$('a-loc').value.trim(), price:link?'':$('a-price').value.trim(), status:null, tags:[], images:[], grabs:1, cat:'active' };
+    if(number) c.e164=number;
+    if(hasLinks) c.links=Object.assign({},addLinks);
+    if(handle){ c.handle=handle; c.site=site; if(!c.name) c.name=handleName(c); }
+    store.add(c); addLinks={}; renderAddLinks(); ['a-number2','a-name2','a-url','a-number','a-name','a-loc','a-price'].forEach(i=>{ if($(i)) $(i).value=''; }); $('shareUrl').textContent='paste or share a listing link';
     back(); toast('Contact added'); showTab('t-contacts');
   });
   // outreach stepper

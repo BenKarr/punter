@@ -80,7 +80,7 @@
   <section class="screen tabscreen" id="t-contacts">
     <div class="hd">
       <div class="hd-top">
-        <div class="brand"><span class="gb low">punter</span> <span class="build" id="pbuild">p.34</span></div>
+        <div class="brand"><span class="gb low">punter</span> <span class="build" id="pbuild">p.37</span></div>
         <div class="iconbtn" id="selBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
       </div>
       <div class="search" style="position:relative"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="searchInput" placeholder="Search number, name, area..." style="padding-right:34px"><div id="searchClear" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--mut4);color:#fff;font-family:var(--mo);font-size:13px;line-height:22px;text-align:center;cursor:pointer">×</div></div>
@@ -168,6 +168,7 @@
     <div class="body" style="padding-bottom:30px">
       <div class="carou" id="carou"></div>
       <div class="strip" id="strip"></div>
+      <button class="expbtn" id="expBtn" style="display:none"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span id="expBtnTxt">Export photos</span></button>
       <div class="dbody">
         <div class="dnum" id="dnum"></div>
         <div class="dalt" id="dalt"></div>
@@ -196,6 +197,7 @@
           <button class="tagbtn creamed" data-tag="creamed">Creamed</button>
           <button class="tagbtn pinbtn" data-tag="pinned"><svg class="ic" viewBox="0 0 24 24"><path d="M9 4h6l-1 7 3 3v1H7v-1l3-3-1-7z"/><path d="M12 15v6"/></svg>Pinned</button>
         </div></div>
+        <div class="sec" id="linksSec"><div class="seclbl">Links</div><div id="dlinks"></div><button class="linkadd" id="linkAddBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add link</button></div>
         <div class="sec" id="listingSec"><div class="seclbl">Listing</div><div class="ttl" id="dtitle"></div><div class="desc" id="ddesc"></div></div>
         <div class="sec" id="ratesSec"><div class="seclbl" style="justify-content:space-between">Rates <button id="rateSheetBtn" class="pbtn" style="font-family:var(--hd);font-size:13px;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:9px;min-height:44px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;letter-spacing:0;text-transform:none"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M14 6l4 4"/></svg>Number and rates</button></div><div class="card" id="drates"></div></div>
         <div class="sec" id="allDetails" style="display:none"><div class="seclbl">All details</div><div class="card adbody"></div></div>
@@ -242,8 +244,8 @@
         <div class="seclbl">Details</div>
         <div class="autocard"><div class="addnote">On the live app a Cloud Function pulls the listing title, price and photos from this link. Here, fill what you like below.</div></div>
         <div class="field" style="margin-top:14px"><label>Display name</label><input id="a-name2" placeholder="Name, area"></div>
-        <div class="field"><label>Phone number · the part you add</label><input class="mono numfield" id="a-number2" placeholder="07... paste the number you revealed"></div>
-        <div class="addnote">The number is hidden behind a tap on Vivastreet, so reveal it, copy, paste here.</div>
+        <div class="field"><label>Phone number · optional when a link is added</label><input class="mono numfield" id="a-number2" placeholder="07... paste the number you revealed"></div>
+        <div class="addnote">The number is hidden behind a tap on Vivastreet, so reveal it, copy, paste here. A TikTok or Instagram share needs no number, add it later from the contact.</div>
       </div>
       <div id="addman" style="display:none">
         <div class="field"><label>Phone number</label><input class="mono numfield" id="a-number" placeholder="07..."></div>
@@ -251,6 +253,7 @@
         <div class="field"><label>Location · optional</label><input id="a-loc" placeholder="Area, region"></div>
         <div class="field"><label>Price · optional</label><input id="a-price" placeholder="£120/hr"></div>
       </div>
+      <div id="addLinks" style="margin-top:14px"><div class="seclbl">Links</div><div id="addLinksRows"></div><button class="linkadd" id="addLinkBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add link</button></div>
     </div>
     <div class="editbar"><button class="pbtn sec" id="addCancel">Cancel</button><button class="pbtn pri" id="addSave">Save contact</button></div>
   </section>
@@ -313,6 +316,7 @@
   </div>
   <div class="toast" id="toast"></div>
 </div>
+<script src="jpegmeta.js"></script>
 <script type="module" src="app.js"></script>
 
   <div class="sheet-bg" id="pacesheetbg"><div class="sheet" id="pacesheet">

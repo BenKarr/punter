@@ -30,3 +30,23 @@ minutes and then it lives in your Share Sheet forever.
   the revealed `tel:` / `wa.me` link, so reveal first.
 - The script handles Vivastreet and Publi24 today. Other sites fall back to
   page title and the share URL only. New sites = a new `else if` block.
+
+## Second Shortcut: Link to punter (p.35, TikTok, Instagram, Telegram profiles)
+
+The TikTok app cannot hand a Shortcut a web page, only a link, so this one
+takes the link and opens punter on the Add screen with her handle filled in.
+
+1. Shortcuts, **+**, name it **Link to punter**.
+2. Turn on **Show in Share Sheet**. Under accepted types keep **URLs** and
+   **Text** (TikTok shares a URL, some apps share text with the link inside).
+3. Add action **URL Encode** with input **Shortcut Input**.
+4. Add action **Open URLs** with the URL
+   `https://benkarr.github.io/punter/?url=` followed by the **URL Encoded Text**
+   magic variable from step 3.
+
+Use it: in TikTok open her profile, tap **Share**, then **Link to punter**
+(or **Copy link**, then open punter and paste into Add contact, Add link).
+punter strips the tracking tail and saves her as `@handle`. The same
+Shortcut works for Instagram, Telegram, Snapchat, OnlyFans, X and Facebook
+profile links. On Android the installed punter appears in the share sheet
+directly, no Shortcut needed.
